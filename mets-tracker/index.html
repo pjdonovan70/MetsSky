@@ -16,8 +16,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; background-image: radial-gradient(at 0% 0%, #002D72 0, transparent 50%), radial-gradient(at 100% 100%, #FF5910 0, transparent 50%); background-attachment: fixed; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
-        .glass-input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.2s; }
-        .glass-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
         .mets-orange { color: #FF5910; }
         .mets-blue { color: #002D72; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -71,7 +69,8 @@
             DollarSign: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
             Flame: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.7 2 2.5 3 2.9 4.3z"/></svg>,
             Search: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
-            Newspaper: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+            Newspaper: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>,
+            LogOut: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
         };
 
         // --- CONFIGURATION ---
@@ -88,7 +87,7 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // --- CHAT COMPONENT ---
+        // --- CHAT COMPONENT (Interactive for everyone) ---
         const ChatBox = () => {
             const [isOpen, setIsOpen] = useState(false);
             const [username, setUsername] = useState(localStorage.getItem('mets_chat_username') || '');
@@ -142,7 +141,7 @@
             }
 
             return (
-                <div className="fixed bottom-6 right-6 w-80 md:w-96 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden chat-anim" style={{height: '500px', maxHeight: '80vh'}}>
+                <div className="fixed bottom-0 right-0 w-full md:w-96 md:bottom-6 md:right-6 bg-slate-900/95 backdrop-blur-xl border-t md:border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl z-50 flex flex-col overflow-hidden chat-anim" style={{height: '500px', maxHeight: '80vh'}}>
                     <div className="bg-blue-600/20 p-4 flex justify-between items-center border-b border-white/10 cursor-pointer" onClick={() => setIsOpen(false)}>
                         <div className="flex items-center gap-2">
                             <span className="text-xl">⚾</span>
@@ -200,32 +199,20 @@
             );
         };
 
-        // --- NEW COUNTDOWN COMPONENT ---
+        // --- COUNTDOWN (READ ONLY) ---
         const CountdownTicket = () => {
-            const [data, setData] = useState({ title: 'Opening Day', date: '2026-03-28' }); // Default
-            const [isEditing, setIsEditing] = useState(false);
-            const [tempData, setTempData] = useState(data);
+            const [data, setData] = useState({ title: 'Opening Day', date: '2026-03-28' }); 
 
             useEffect(() => {
                 const unsub = db.collection('mets_settings').doc('countdown').onSnapshot(doc => {
-                    if (doc.exists) {
-                        setData(doc.data());
-                        setTempData(doc.data());
-                    }
+                    if (doc.exists) { setData(doc.data()); }
                 });
                 return () => unsub();
             }, []);
 
-            const handleSave = async () => {
-                if(!tempData.title || !tempData.date) return;
-                await db.collection('mets_settings').doc('countdown').set(tempData);
-                setIsEditing(false);
-            };
-
             const today = new Date();
             today.setHours(0,0,0,0);
             const target = new Date(data.date);
-            // Fix timezone offset issue by forcing target to midnight local
             const targetLocal = new Date(target.getUTCFullYear(), target.getUTCMonth(), target.getUTCDate());
             
             const diffTime = targetLocal - today;
@@ -234,60 +221,28 @@
 
             return (
                 <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in">
-                    <button onClick={() => setIsEditing(!isEditing)} className="absolute top-4 right-4 text-slate-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Edit2 className="w-4 h-4"/></button>
-                    
-                    {isEditing ? (
-                        <div className="w-full flex flex-col md:flex-row gap-4 items-center">
-                             <div className="flex-1 w-full">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Event Title</label>
-                                <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 font-bold" value={tempData.title} onChange={e => setTempData({...tempData, title: e.target.value})} />
-                            </div>
-                            <div className="w-full md:w-auto">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Target Date</label>
-                                <input type="date" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={tempData.date} onChange={e => setTempData({...tempData, date: e.target.value})} />
-                            </div>
-                            <div className="flex gap-2 mt-4 md:mt-0">
-                                <button onClick={handleSave} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-sm">Save</button>
-                                <button onClick={() => setIsEditing(false)} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Cancel</button>
-                            </div>
+                    <div className="flex items-center gap-6 w-full md:w-auto">
+                        <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]">
+                            <div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div>
                         </div>
-                    ) : (
-                        <>
-                            <div className="flex items-center gap-6">
-                                <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]">
-                                    <div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div>
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div>
-                                    <h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2>
-                                    <div className="text-sm text-slate-500 font-bold mt-1">{new Date(data.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                                </div>
-                            </div>
-                            <div className="hidden md:block">
-                                <Icons.Calendar className="w-16 h-16 text-white/5" />
-                            </div>
-                        </>
-                    )}
+                        <div>
+                            <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div>
+                            <h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2>
+                            <div className="text-sm text-slate-500 font-bold mt-1">{new Date(data.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    <div className="hidden md:block">
+                        <Icons.Calendar className="w-16 h-16 text-white/5" />
+                    </div>
                 </div>
             );
         };
 
-        const ScheduleCard = ({ game, onUpdate, onDelete }) => {
-            const [isEditing, setIsEditing] = useState(false); 
-            const [editResult, setEditResult] = useState(game.result || 'Pending');
-            const [editScoreUs, setEditScoreUs] = useState(game.scoreUs || ''); 
-            const [editScoreThem, setEditScoreThem] = useState(game.scoreThem || ''); 
+        // --- SCHEDULE CARD (READ ONLY) ---
+        const ScheduleCard = ({ game }) => {
             const [isLinkOpen, setIsLinkOpen] = useState(false);
             const [isNoteOpen, setIsNoteOpen] = useState(false);
-            const [noteText, setNoteText] = useState(game.notes || '');
-            const [newLinkTitle, setNewLinkTitle] = useState(''); 
-            const [newLinkUrl, setNewLinkUrl] = useState('');
-
-            const handleSave = () => { onUpdate(game.id, { result: editResult, scoreUs: editScoreUs, scoreThem: editScoreThem }); setIsEditing(false); };
-            const handleSaveNote = () => { onUpdate(game.id, { notes: noteText }); setIsNoteOpen(false); };
-            const addLink = () => { if (!newLinkTitle || !newLinkUrl) return; const links = game.links || []; onUpdate(game.id, { links: [...links, { title: newLinkTitle, url: newLinkUrl }] }); setNewLinkTitle(''); setNewLinkUrl(''); };
-            const removeLink = (idx) => { const links = [...(game.links || [])]; links.splice(idx, 1); onUpdate(game.id, { links }); };
             
             const borderColor = game.location === 'Home' ? 'border-blue-500' : 'border-orange-500';
 
@@ -301,57 +256,70 @@
                             <div className="text-xl font-black text-white mt-1">{game.opponent}</div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-black/20 p-1 rounded-lg border border-white/5">
-                                <select className={`bg-transparent text-xs font-bold focus:outline-none ${editResult === 'W' ? 'text-green-400' : editResult === 'L' ? 'text-red-400' : 'text-slate-400'}`} value={editResult} onChange={(e) => { setEditResult(e.target.value); onUpdate(game.id, { result: e.target.value, scoreUs: editScoreUs, scoreThem: editScoreThem }); }}><option value="Pending">-</option><option value="W">W</option><option value="L">L</option></select>
-                                <div className="h-4 w-px bg-white/10"></div>
-                                <div className="flex items-center gap-1"><input type="text" className="w-6 bg-transparent text-center text-sm text-white font-bold focus:outline-none" placeholder="-" value={editScoreUs} onChange={(e) => setEditScoreUs(e.target.value)} onBlur={() => onUpdate(game.id, { scoreUs: editScoreUs, scoreThem: editScoreThem })} /><span className="text-slate-600 text-xs">:</span><input type="text" className="w-6 bg-transparent text-center text-sm text-white font-bold focus:outline-none" placeholder="-" value={editScoreThem} onChange={(e) => setEditScoreThem(e.target.value)} onBlur={() => onUpdate(game.id, { scoreUs: editScoreUs, scoreThem: editScoreThem })} /></div>
+                            <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-lg border border-white/5 text-sm font-bold">
+                                {game.result !== 'Pending' ? (
+                                    <>
+                                        <span className={game.result === 'W' ? 'text-green-400' : 'text-red-400'}>{game.result}</span>
+                                        <span className="text-white mx-1">{game.scoreUs}-{game.scoreThem}</span>
+                                    </>
+                                ) : (
+                                    <span className="text-slate-500">vs</span>
+                                )}
                             </div>
-                            <button onClick={() => onDelete(game.id)} className="p-2 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4"/></button>
                         </div>
                     </div>
                     
-                    <div className="mt-3 pt-3 border-t border-white/5">
-                        <div className="flex gap-4">
-                            <button onClick={() => { setIsNoteOpen(!isNoteOpen); setIsLinkOpen(false); }} className={`flex-1 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 py-1 rounded transition-colors ${game.notes ? 'text-yellow-400 bg-yellow-900/10' : 'text-slate-500 hover:bg-white/5 hover:text-white'}`}><Icons.FileText className="w-3 h-3"/> Notes {game.notes && '✓'}</button>
-                            <div className="w-px bg-white/10"></div>
-                            <button onClick={() => { setIsLinkOpen(!isLinkOpen); setIsNoteOpen(false); }} className={`flex-1 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 py-1 rounded transition-colors ${game.links?.length > 0 ? 'text-blue-400 bg-blue-900/10' : 'text-slate-500 hover:bg-white/5 hover:text-white'}`}><Icons.Link className="w-3 h-3"/> Recaps ({game.links?.length || 0})</button>
+                    {(game.notes || (game.links && game.links.length > 0)) && (
+                        <div className="mt-3 pt-3 border-t border-white/5">
+                            <div className="flex gap-4">
+                                {game.notes && <button onClick={() => { setIsNoteOpen(!isNoteOpen); setIsLinkOpen(false); }} className={`flex-1 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 py-1 rounded transition-colors ${game.notes ? 'text-yellow-400 bg-yellow-900/10' : 'text-slate-500'}`}><Icons.FileText className="w-3 h-3"/> Notes</button>}
+                                {game.links && game.links.length > 0 && <button onClick={() => { setIsLinkOpen(!isLinkOpen); setIsNoteOpen(false); }} className={`flex-1 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 py-1 rounded transition-colors ${game.links?.length > 0 ? 'text-blue-400 bg-blue-900/10' : 'text-slate-500'}`}><Icons.Link className="w-3 h-3"/> Recaps ({game.links?.length})</button>}
+                            </div>
+
+                            {isNoteOpen && (
+                                <div className="mt-3 animate-fade-in">
+                                    <div className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-sm text-slate-200">{game.notes}</div>
+                                </div>
+                            )}
+
+                            {isLinkOpen && (
+                                <div className="mt-3 space-y-2 animate-fade-in">
+                                    {game.links && game.links.map((link, idx) => (<div key={idx} className="flex justify-between items-center bg-slate-900/30 p-2 rounded text-xs border border-white/5 hover:border-white/10"><a href={link.url} target="_blank" className="text-blue-400 hover:underline truncate flex-1 font-medium">{link.title}</a></div>))}
+                                </div>
+                            )}
                         </div>
-
-                        {isNoteOpen && (
-                            <div className="mt-3 animate-fade-in">
-                                <textarea className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-sm text-slate-200 focus:border-yellow-500/50 outline-none min-h-[80px] mb-2" placeholder="Game notes..." value={noteText} onChange={(e) => setNoteText(e.target.value)}></textarea>
-                                <div className="flex justify-end gap-2"><button onClick={() => setIsNoteOpen(false)} className="text-xs text-slate-500 hover:text-white px-3 py-1">Cancel</button><button onClick={handleSaveNote} className="text-xs bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-1 rounded-lg font-bold">Save Note</button></div>
-                            </div>
-                        )}
-
-                        {isLinkOpen && (
-                            <div className="mt-3 space-y-2 animate-fade-in">
-                                {game.links && game.links.map((link, idx) => (<div key={idx} className="flex justify-between items-center bg-slate-900/30 p-2 rounded text-xs border border-white/5 hover:border-white/10"><a href={link.url} target="_blank" className="text-blue-400 hover:underline truncate flex-1 font-medium">{link.title}</a><button onClick={() => removeLink(idx)} className="text-slate-600 hover:text-red-500 ml-2"><Icons.Trash2 className="w-3 h-3"/></button></div>))}
-                                <div className="flex gap-2 mt-2"><input type="text" placeholder="Title" className="bg-slate-900/50 border border-white/10 rounded p-2 text-xs text-white flex-1 focus:border-blue-500 outline-none" value={newLinkTitle} onChange={e => setNewLinkTitle(e.target.value)} /><input type="text" placeholder="URL" className="bg-slate-900/50 border border-white/10 rounded p-2 text-xs text-white flex-1 focus:border-blue-500 outline-none" value={newLinkUrl} onChange={e => setNewLinkUrl(e.target.value)} /><button onClick={addLink} className="bg-slate-700 text-white px-3 rounded text-xs font-bold hover:bg-blue-600 transition-colors">+</button></div>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div> 
             );
         };
 
-        const RantCard = ({ rant, onDelete }) => (
+        // --- RANT CARD (MESSAGE BOARD STYLE) ---
+        const RantCard = ({ rant, currentUser, onDelete }) => (
             <div className="glass-panel p-5 rounded-2xl border border-white/5 relative group">
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${rant.mood === 'Happy' ? 'bg-green-500' : rant.mood === 'Angry' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
                         <span className="text-xs font-bold uppercase text-slate-500">{rant.date}</span>
                     </div>
-                    <button onClick={() => onDelete(rant.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4" /></button>
+                    {/* Show delete only if current user owns the post */}
+                    {currentUser && currentUser.uid === rant.authorId && (
+                        <button onClick={() => onDelete(rant.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Icons.Trash2 className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
                 <div className="text-lg font-bold text-white mb-1">{rant.topic}</div>
-                <p className="text-slate-300 text-sm leading-relaxed">{rant.content}</p>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">{rant.content}</p>
+                <div className="border-t border-white/5 pt-2 flex items-center gap-2">
+                    {rant.authorPhoto ? <img src={rant.authorPhoto} className="w-5 h-5 rounded-full" /> : <div className="w-5 h-5 rounded-full bg-slate-700"></div>}
+                    <span className="text-[10px] font-bold text-blue-400">{rant.authorName || 'Anonymous Fan'}</span>
+                </div>
             </div>
         );
 
-        const PlayerCard = ({ player, onDelete }) => (
+        // --- PLAYER CARD (READ ONLY) ---
+        const PlayerCard = ({ player }) => (
             <div className="glass-panel p-4 rounded-2xl border border-white/10 relative group hover:border-blue-500/50 transition-all">
-                <button onClick={() => onDelete(player.id)} className="absolute top-3 right-3 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4" /></button>
                 <div className="flex items-center gap-4">
                     <div className={`h-12 w-12 rounded-full flex items-center justify-center font-black text-lg border-2 ${player.status === 'Hot' ? 'border-green-500 text-green-400 bg-green-900/20' : player.status === 'Cold' ? 'border-blue-400 text-blue-300 bg-blue-900/20' : 'border-red-500 text-red-400 bg-red-900/20'}`}>{player.number}</div>
                     <div>
@@ -363,24 +331,24 @@
             </div>
         );
 
-        const LinkCard = ({ link, onDelete }) => (
+        // --- LINK CARD (READ ONLY) ---
+        const LinkCard = ({ link }) => (
             <div className="glass-panel p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex justify-between items-center group">
-                <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="bg-blue-600/20 p-2 rounded-lg text-blue-400"><Icons.Link className="w-5 h-5" /></div>
-                    <a href={link.url} target="_blank" className="text-white font-bold hover:text-orange-400 transition-colors truncate block">{link.title}</a>
+                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                    <div className="bg-blue-600/20 p-2 rounded-lg text-blue-400 flex-shrink-0"><Icons.Link className="w-5 h-5" /></div>
+                    <a href={link.url} target="_blank" className="text-white font-bold hover:text-orange-400 transition-colors break-words text-sm md:text-base">{link.title}</a>
                 </div>
-                <button onClick={() => onDelete(link.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4" /></button>
             </div>
         );
         
-        const TransactionCard = ({ transaction, onDelete }) => {
+        // --- TRANSACTION CARD (READ ONLY) ---
+        const TransactionCard = ({ transaction }) => {
             const typeStyles = { Lost: 'border-red-500/50 bg-red-900/10', Signed: 'border-green-500/50 bg-green-900/10', Trade: 'border-blue-500/50 bg-blue-900/10', DFA: 'border-red-500/50 bg-red-900/10', Waivers: 'border-yellow-500/50 bg-yellow-900/10', Optioned: 'border-slate-500/50 bg-slate-900/10', Promoted: 'border-green-500/50 bg-green-900/10', IL: 'border-red-500/50 bg-red-900/10', Extension: 'border-green-500/50 bg-green-900/10' };
             const typeIcons = { Lost: <Icons.X className="w-5 h-5 text-red-400"/>, Signed: <Icons.Check className="w-5 h-5 text-green-400"/>, Trade: <Icons.RefreshCw className="w-5 h-5 text-blue-400"/>, DFA: <Icons.X className="w-5 h-5 text-red-400"/>, Waivers: <Icons.FileText className="w-5 h-5 text-yellow-400"/>, Optioned: <Icons.ArrowDownCircle className="w-5 h-5 text-slate-400"/>, Promoted: <Icons.ArrowUpCircle className="w-5 h-5 text-green-400"/>, IL: <Icons.Activity className="w-5 h-5 text-red-400"/>, Extension: <Icons.Check className="w-5 h-5 text-green-400"/> };
             return ( 
                 <div className={`glass-panel p-4 rounded-2xl border-l-4 relative group ${typeStyles[transaction.type]}`}>
                     <div className="flex justify-between items-start mb-1">
                         <div className="flex items-center gap-2">{typeIcons[transaction.type] || <Icons.ArrowRight className="w-5 h-5"/>}<span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{transaction.type}</span></div>
-                        <button onClick={() => onDelete(transaction.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4" /></button>
                     </div>
                     <div className="font-black text-white text-lg mt-1">{transaction.player}</div>
                     <div className="flex items-center gap-2 text-sm text-slate-300 mt-1"><span>{transaction.fromTeam || "Internal"}</span><Icons.ArrowRight className="w-3 h-3 text-slate-500"/><span className="font-bold text-white">{transaction.toTeam || "Market"}</span></div>
@@ -389,15 +357,9 @@
             );
         };
         
-        const SquadMember = ({ member, onUpdate, onDelete, showStatus = false, isArchived = false }) => {
+        // --- SQUAD MEMBER (READ ONLY) ---
+        const SquadMember = ({ member, showStatus = false, isArchived = false }) => {
             const [isNoteOpen, setIsNoteOpen] = useState(false); 
-            const [noteText, setNoteText] = useState(member.notes || '');
-            
-            const handleSaveNote = () => { onUpdate(member.id, { notes: noteText }); setIsNoteOpen(false); };
-            const restorePlayer = () => { onUpdate(member.id, { status: 'Active (30-Man)' }); };
-            const moveToMinors = () => onUpdate(member.id, { status: '40-Man / Minors' });
-            const moveToActive = () => onUpdate(member.id, { status: 'Active (30-Man)' });
-            const moveToIL = () => onUpdate(member.id, { status: 'Injured List (IL)' });
 
             return ( 
                 <div className={`flex flex-col p-4 hover:bg-white/5 group transition-colors border-b border-white/5 last:border-0 ${isArchived ? 'opacity-60 hover:opacity-100' : ''}`}>
@@ -414,43 +376,29 @@
                             <span className="text-xs text-slate-500 ml-2 font-normal">({member.position})</span>
                             {!isArchived && <span className="text-[10px] font-bold text-slate-600 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{member.throws}</span>}
                             {showStatus && (<span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ml-2 border ${member.status === 'Active (30-Man)' ? 'text-green-400 border-green-500/30 bg-green-900/10' : member.status === '40-Man / Minors' ? 'text-slate-400 border-slate-500/30 bg-slate-900/10' : 'text-red-400 border-red-500/30 bg-red-900/10'}`}>{member.status === 'Active (30-Man)' ? 'Active' : member.status === '40-Man / Minors' ? 'Minors' : 'IL'}</span>)}
-                            <div className="flex gap-1 ml-2">
-                                <button onClick={() => { setIsNoteOpen(!isNoteOpen); }} className={`p-1 rounded hover:bg-white/10 transition-colors ${member.notes ? 'text-yellow-400' : 'text-slate-600 group-hover:text-slate-400'}`} title="Notes"><Icons.FileText className="w-3 h-3"/></button>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {!isArchived && (<div className="flex gap-1 mr-2 border-r border-white/10 pr-2">{member.status === 'Active (30-Man)' && (<><button onClick={moveToMinors} title="Send to Minors/40-Man" className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"><Icons.ArrowDownCircle className="w-4 h-4" /></button><button onClick={moveToIL} title="Place on IL" className="p-1 rounded text-red-400/50 hover:text-red-400 hover:bg-red-900/20 transition-colors"><Icons.Activity className="w-4 h-4" /></button></>)}{member.status === '40-Man / Minors' && (<button onClick={moveToActive} title="Call Up to Active Roster" className="p-1 rounded text-green-500/70 hover:text-green-400 hover:bg-green-900/20 transition-colors"><Icons.ArrowUpCircle className="w-4 h-4" /></button>)}{member.status === 'Injured List (IL)' && (<button onClick={moveToActive} title="Activate from IL" className="p-1 rounded text-green-500/70 hover:text-green-400 hover:bg-green-900/20 transition-colors"><Icons.ArrowUpCircle className="w-4 h-4" /></button>)}</div>)}
-                            {isArchived && <button onClick={restorePlayer} className="text-xs bg-blue-900/30 text-blue-400 px-2 py-1 rounded hover:bg-blue-900/50 mr-2">Restore</button>}
-                            <button onClick={() => onDelete(member.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4"/></button>
+                            {member.notes && (
+                                <div className="flex gap-1 ml-2">
+                                    <button onClick={() => { setIsNoteOpen(!isNoteOpen); }} className={`p-1 rounded hover:bg-white/10 transition-colors text-yellow-400`} title="Notes"><Icons.FileText className="w-3 h-3"/></button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    {isNoteOpen && (<div className="mt-3 ml-11 animate-fade-in"><label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Player Notes / Scouting Report</label><textarea className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-sm text-slate-200 focus:border-yellow-500/50 outline-none min-h-[80px]" placeholder="Enter notes..." value={noteText} onChange={(e) => setNoteText(e.target.value)}></textarea><div className="flex justify-end gap-2 mt-2"><button onClick={() => setIsNoteOpen(false)} className="text-xs text-slate-500 hover:text-white px-3 py-1">Cancel</button><button onClick={handleSaveNote} className="text-xs bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-1 rounded-lg font-bold">Save Note</button></div></div>)}
+                    {isNoteOpen && member.notes && (<div className="mt-3 ml-11 animate-fade-in"><label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Scouting Report</label><div className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-sm text-slate-200">{member.notes}</div></div>)}
                 </div> 
             );
         };
 
-        const MediaBoard = ({ channels, onAddChannel, onDeleteChannel }) => {
-             const [newChannelName, setNewChannelName] = useState(''); 
-             const [newChannelUrl, setNewChannelUrl] = useState(''); 
+        // --- MEDIA BOARD (READ ONLY) ---
+        const MediaBoard = ({ channels }) => {
              const [videos, setVideos] = useState([]);
              const [loading, setLoading] = useState(false);
-
-             const handleAdd = (e) => { 
-                 e.preventDefault(); 
-                 onAddChannel({ name: newChannelName, url: newChannelUrl }); 
-                 setNewChannelName(''); 
-                 setNewChannelUrl(''); 
-             };
 
              const loadFeeds = async () => {
                 setLoading(true);
                 const rssUrls = [];
-                
-                // 1. Official Hardcoded Mets/SNY Feeds
                 rssUrls.push('https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5t17X9J7sXU7Q4lC7sX7g'); // Mets
                 rssUrls.push('https://www.youtube.com/feeds/videos.xml?channel_id=UCMK264qQk8Xh7j1wZ_8o36w'); // SNY
 
-                // 2. Dynamic Feeds from User Channels
                 channels.forEach(ch => {
                     if(!ch.url) return;
                     let match = ch.url.match(/channel\/(UC[\w-]+)/);
@@ -487,15 +435,6 @@
 
              return ( 
                 <div className="space-y-8 animate-fade-in">
-                    <div className="glass-panel p-6 rounded-3xl border border-slate-700">
-                        <h3 className="text-lg font-black text-white mb-4">Add Channel / Link</h3>
-                        <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-4">
-                            <input type="text" placeholder="Name (e.g. Mets'd Up)" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newChannelName} onChange={e => setNewChannelName(e.target.value)} required />
-                            <input type="text" placeholder="YouTube Link (Use channel/ID format for auto-sync)" className="flex-[2] bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newChannelUrl} onChange={e => setNewChannelUrl(e.target.value)} required />
-                            <button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg">Add</button>
-                        </form>
-                    </div>
-
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-black text-white flex items-center gap-2"><Icons.Play className="w-5 h-5 text-red-500"/> Video Wall (Latest)</h2>
@@ -517,7 +456,7 @@
                                         </div>
                                     </a>
                                 ))}
-                                {videos.length === 0 && <div className="col-span-full text-center text-slate-500 italic">No videos found. Add YouTube channels with "/channel/ID" links to populate this wall.</div>}
+                                {videos.length === 0 && <div className="col-span-full text-center text-slate-500 italic">No videos found.</div>}
                             </div>
                         )}
                     </div>
@@ -527,11 +466,10 @@
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {channels.map(channel => (
                                 <div key={channel.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex justify-between items-center group">
-                                    <a href={channel.url} target="_blank" className="flex items-center gap-3 overflow-hidden">
-                                        <div className="bg-slate-800 p-2 rounded-lg text-slate-400"><Icons.Link className="w-4 h-4"/></div>
-                                        <span className="text-white font-bold truncate hover:text-orange-400 transition-colors">{channel.name}</span>
+                                    <a href={channel.url} target="_blank" className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                                        <div className="bg-slate-800 p-2 rounded-lg text-slate-400 flex-shrink-0"><Icons.Link className="w-4 h-4"/></div>
+                                        <span className="text-white font-bold hover:text-orange-400 transition-colors break-words text-sm md:text-base">{channel.name}</span>
                                     </a>
-                                    <button onClick={() => onDeleteChannel(channel.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4"/></button>
                                 </div>
                             ))}
                         </div>
@@ -539,12 +477,10 @@
                 </div> 
             );
         };
-        const DatabaseItem = ({ item, onUpdate, onDelete }) => {
+
+        // --- DATABASE ITEM (READ ONLY) ---
+        const DatabaseItem = ({ item }) => {
             const [isExpanded, setIsExpanded] = useState(false); 
-            const [newLinkTitle, setNewLinkTitle] = useState(''); 
-            const [newLinkUrl, setNewLinkUrl] = useState('');
-            const addLink = () => { if (!newLinkTitle || !newLinkUrl) return; const links = item.links || []; onUpdate(item.id, { links: [...links, { title: newLinkTitle, url: newLinkUrl }] }); setNewLinkTitle(''); setNewLinkUrl(''); };
-            const removeLink = (idx) => { const links = [...(item.links || [])]; links.splice(idx, 1); onUpdate(item.id, { links }); };
             return ( 
                 <div className="glass-panel p-5 rounded-2xl border border-white/5 hover:border-white/20 transition-all group">
                     <div className="flex justify-between items-center cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
@@ -560,26 +496,17 @@
                                 {item.links && item.links.map((link, idx) => (
                                     <div key={idx} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
                                         <a href={link.url} target="_blank" className="text-blue-400 hover:text-white hover:underline font-bold flex items-center gap-2"><Icons.Link className="w-3 h-3"/> {link.title}</a>
-                                        <button onClick={() => removeLink(idx)} className="text-slate-600 hover:text-red-500 transition-colors"><Icons.Trash2 className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                {(!item.links || item.links.length === 0) && <div className="text-slate-600 text-sm italic">No links yet. Add archives here.</div>}
+                                {(!item.links || item.links.length === 0) && <div className="text-slate-600 text-sm italic">No links yet.</div>}
                             </div>
-                            <div className="flex gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/10">
-                                <input type="text" placeholder="Description" className="flex-1 bg-transparent text-sm text-white px-2 focus:outline-none" value={newLinkTitle} onChange={e => setNewLinkTitle(e.target.value)} />
-                                <div className="w-px bg-white/10"></div>
-                                <input type="text" placeholder="URL" className="flex-1 bg-transparent text-sm text-white px-2 focus:outline-none" value={newLinkUrl} onChange={e => setNewLinkUrl(e.target.value)} />
-                                <button onClick={addLink} className="bg-blue-600 text-white px-4 py-1 rounded-lg font-bold hover:bg-blue-500 text-xs">ADD</button>
-                            </div>
-                            <button onClick={() => onDelete(item.id)} className="w-full mt-4 text-xs text-red-400/50 hover:text-red-400 hover:bg-red-900/20 py-2 rounded-lg transition-all">Delete Entry</button>
                         </div>
                     )}
                 </div> 
             );
         };
-        const DatabaseBoard = ({ years, players, onAddItem, onUpdateItem, onDeleteItem }) => {
-            const [activeSubTab, setActiveSubTab] = useState('years'); const [newItemName, setNewItemName] = useState('');
-            const handleAdd = (e) => { e.preventDefault(); if (!newItemName.trim()) return; onAddItem({ name: newItemName, type: activeSubTab === 'years' ? 'year' : 'player', links: [] }); setNewItemName(''); };
+        const DatabaseBoard = ({ years, players }) => {
+            const [activeSubTab, setActiveSubTab] = useState('years');
             const currentList = activeSubTab === 'years' ? years : players;
             return ( 
                 <div className="space-y-8 animate-fade-in">
@@ -587,30 +514,18 @@
                         <button onClick={() => setActiveSubTab('years')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-2 ${activeSubTab === 'years' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><Icons.Calendar className="w-4 h-4"/> Historical Years</button>
                         <button onClick={() => setActiveSubTab('players')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-2 ${activeSubTab === 'players' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><Icons.Users className="w-4 h-4"/> Player Archive</button>
                     </div>
-                    <div className="glass-panel p-6 rounded-3xl border border-slate-700">
-                        <form onSubmit={handleAdd} className="flex gap-4">
-                            <input type="text" placeholder={activeSubTab === 'years' ? "Enter Year (e.g. 1986)" : "Enter Player Name"} className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-blue-500 text-lg font-bold" value={newItemName} onChange={e => setNewItemName(e.target.value)} />
-                            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg text-xl"><Icons.Plus className="w-6 h-6"/></button>
-                        </form>
-                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {currentList.map(item => (<DatabaseItem key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} />))}
-                        {currentList.length === 0 && (<div className="col-span-full text-center py-12"><div className="text-slate-600 text-lg italic">The archives are empty. Start building history.</div></div>)}
+                        {currentList.map(item => (<DatabaseItem key={item.id} item={item} />))}
+                        {currentList.length === 0 && (<div className="col-span-full text-center py-12"><div className="text-slate-600 text-lg italic">The archives are empty.</div></div>)}
                     </div>
                 </div> 
             );
         }
 
-        const NewsBoard = ({ news, onAdd, onDelete }) => {
+        // --- NEWS BOARD (READ ONLY) ---
+        const NewsBoard = ({ news }) => {
             const [filterMonth, setFilterMonth] = useState('All');
             const [filterWeek, setFilterWeek] = useState('All');
-            const [newItem, setNewItem] = useState({ title: '', url: '', date: new Date().toISOString().split('T')[0], type: 'Article' });
-
-            const handleAdd = (e) => {
-                e.preventDefault();
-                onAdd(newItem);
-                setNewItem({ title: '', url: '', date: new Date().toISOString().split('T')[0], type: 'Article' });
-            };
 
             const getMonthName = (dateStr) => { if(!dateStr) return ''; const d = new Date(dateStr + 'T12:00:00'); return d.toLocaleString('default', { month: 'long' }); };
             const getDay = (dateStr) => { if(!dateStr) return 0; const d = new Date(dateStr + 'T12:00:00'); return d.getDate(); };
@@ -639,34 +554,6 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="glass-panel p-6 rounded-3xl border border-slate-700">
-                        <h3 className="text-lg font-black text-white mb-4">Post News</h3>
-                        <form onSubmit={handleAdd} className="flex gap-3 items-end">
-                            <div className="w-32 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Date</label>
-                                <input type="date" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newItem.date} onChange={e => setNewItem({...newItem, date: e.target.value})} required />
-                            </div>
-                            <div className="w-32 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Type</label>
-                                <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newItem.type} onChange={e => setNewItem({...newItem, type: e.target.value})}>
-                                    <option value="Article">Article</option>
-                                    <option value="Video">Video</option>
-                                    <option value="Tweet">Tweet</option>
-                                    <option value="Blog">Blog</option>
-                                </select>
-                            </div>
-                            <div className="flex-[2] space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Headline</label>
-                                <input type="text" placeholder="News Headline..." className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} required />
-                            </div>
-                            <div className="flex-[2] space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Link URL</label>
-                                <input type="text" placeholder="https://..." className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newItem.url} onChange={e => setNewItem({...newItem, url: e.target.value})} required />
-                            </div>
-                            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl shadow-lg h-[50px] w-[50px] flex items-center justify-center"><Icons.Plus className="w-6 h-6"/></button>
-                        </form>
-                    </div>
-
                     <div className="space-y-2">
                         <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2">
                             {monthsList.map(month => (
@@ -683,20 +570,17 @@
                     <div className="grid gap-3">
                         {filteredNews.map(n => (
                             <div key={n.id} className={`glass-panel p-4 rounded-2xl border transition-all group flex items-center justify-between ${n.type === 'Live Feed' ? 'border-green-500/30 bg-green-900/5' : 'border-white/10 hover:bg-white/5'}`}>
-                                <div className="flex items-center gap-4 overflow-hidden">
-                                    <div className={`p-3 rounded-xl border ${n.type === 'Live Feed' ? 'text-green-400 border-green-500/50' : typeColors[n.type] || 'text-slate-400 border-slate-500'}`}>
+                                <div className="flex items-center gap-4 overflow-hidden w-full">
+                                    <div className={`p-3 rounded-xl border flex-shrink-0 ${n.type === 'Live Feed' ? 'text-green-400 border-green-500/50' : typeColors[n.type] || 'text-slate-400 border-slate-500'}`}>
                                         {n.type === 'Live Feed' ? <Icons.Radio className="w-4 h-4 animate-pulse"/> : typeIcons[n.type]}
                                     </div>
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">
                                             {n.date} • {n.type} {n.source && `• ${n.source}`}
                                         </div>
-                                        <a href={n.url} target="_blank" className="text-white font-bold text-lg hover:text-blue-400 transition-colors truncate block">{n.title}</a>
+                                        <a href={n.url} target="_blank" className="text-white font-bold text-base md:text-lg hover:text-blue-400 transition-colors block break-words leading-snug">{n.title}</a>
                                     </div>
                                 </div>
-                                {n.type !== 'Live Feed' && (
-                                    <button onClick={() => onDelete(n.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4"/></button>
-                                )}
                             </div>
                         ))}
                         {filteredNews.length === 0 && <div className="text-center text-slate-500 py-12">No news found for this period.</div>}
@@ -710,6 +594,7 @@
             const [rosterMode, setRosterMode] = useState('squad'); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
             const [filterMonth, setFilterMonth] = useState('All'); 
+            const [currentUser, setCurrentUser] = useState(null);
 
             const [currentSeasonYear, setCurrentSeasonYear] = useState('2025'); 
             const [availableSeasons, setAvailableSeasons] = useState(['2025', '2026']); 
@@ -728,17 +613,23 @@
             const [loading, setLoading] = useState(true);
             
             // Inputs
-            const [newScheduleItem, setNewScheduleItem] = useState({ date: '', opponent: '', location: 'Home', time: '', gameType: 'Regular', result: 'Pending', scoreUs: '', scoreThem: '', links: [], notes: '' });
             const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
-            const [newPlayer, setNewPlayer] = useState({ name: '', number: '', status: 'Hot', notes: '' });
-            const [newSquadMember, setNewSquadMember] = useState({ name: '', number: '', position: 'Pitcher', throws: 'R', status: 'Active (30-Man)', links: [] });
-            const [newLink, setNewLink] = useState({ title: '', url: '' });
-            const [newTrans, setNewTrans] = useState({ type: 'Signed', playerId: '', player: '', fromTeam: '', toTeam: 'Mets', notes: '' });
 
             // Auth & Data
             useEffect(() => {
                 const init = async () => {
-                    await auth.signInAnonymously();
+                    // Listen for auth state changes
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            setCurrentUser(user);
+                        } else {
+                            setCurrentUser(null);
+                            // Only sign in anonymously if they aren't signed in via Google
+                            // but wait, we want message board to require login.
+                            // For now, we can just leave them signed out or sign in anon for read access if strict rules applied.
+                            // Since we aren't using strict rules, we can just track user state.
+                        }
+                    });
                     
                     const checkOnline = () => setIsOnline(navigator.onLine);
                     window.addEventListener('online', checkOnline);
@@ -811,194 +702,37 @@
                 init();
             }, []);
 
-            // --- AUTOMATION ACTIONS ---
-            const syncSchedule = async () => {
-                if(!confirm("Fetch live schedule from MLB (and check for new recaps)?")) return;
+            const handleGoogleLogin = async () => {
+                const provider = new firebase.auth.GoogleAuthProvider();
                 try {
-                    // Request schedule WITH editorial content hydration
-                    const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=121&season=${currentSeasonYear}&hydrate=team,game(content(editorial(recap)))`);
-                    const data = await response.json();
-                    
-                    const batch = db.batch();
-                    data.dates.forEach(d => {
-                        const game = d.games[0];
-                        if(!game) return;
-                        const isHome = game.teams.home.team.id === 121;
-                        const opponent = isHome ? game.teams.away.team.name : game.teams.home.team.name;
-                        const hasResult = game.status.statusCode === 'F' || game.status.statusCode === 'O'; // Final or Over
-                        
-                        let result = 'Pending';
-                        if(hasResult) {
-                            const myScore = isHome ? game.teams.home.score : game.teams.away.score;
-                            const oppScore = isHome ? game.teams.away.score : game.teams.home.score;
-                            result = myScore > oppScore ? 'W' : 'L';
-                        }
-
-                        // RECAP LOGIC (Fixed 404 Error)
-                        let recapLink = null;
-                        // 1. Try to find the official article slug
-                        if(game.content && game.content.editorial && game.content.editorial.recap && game.content.editorial.recap.mlb) {
-                            const slug = game.content.editorial.recap.mlb.slug;
-                            if(slug) {
-                                // FIXED: Added '/news/' prefix
-                                recapLink = { title: 'Game Recap', url: 'https://www.mlb.com/news/' + slug };
-                            }
-                        }
-                        
-                        // 2. Fallback: If game is Final but no article yet, link to Gameday
-                        if(!recapLink && hasResult) {
-                            recapLink = { title: 'MLB Gameday', url: `https://www.mlb.com/gameday/${game.gamePk}` };
-                        }
-
-                        const docRef = db.collection('mets_schedule_2026').doc(String(game.gamePk));
-                        
-                        const updateData = {
-                            date: d.date,
-                            time: new Date(game.gameDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                            opponent: opponent,
-                            location: isHome ? 'Home' : 'Away',
-                            gameType: game.gameType === 'S' ? 'Spring' : 'Regular',
-                            season: currentSeasonYear,
-                            scoreUs: hasResult ? (isHome ? game.teams.home.score : game.teams.away.score) : '',
-                            scoreThem: hasResult ? (isHome ? game.teams.away.score : game.teams.home.score) : '',
-                            result: result,
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        };
-
-                        // Only add link if found. 
-                        // Note: We use arrayUnion to avoid deleting your custom links.
-                        if(recapLink) {
-                            updateData.links = firebase.firestore.FieldValue.arrayUnion(recapLink);
-                        }
-
-                        batch.set(docRef, updateData, { merge: true });
-                    });
-                    await batch.commit();
-                    alert("Schedule & Recaps Synced!");
-                } catch(e) { console.error(e); alert("Sync failed."); }
+                    await auth.signInWithPopup(provider);
+                } catch (error) {
+                    console.error("Google Login Error:", error);
+                    alert("Login failed. Make sure Google Auth is enabled in your Firebase Console and your domain is authorized.");
+                }
             };
 
-            const syncRoster = async () => {
-                if(!confirm("Fetch live 40-man roster from MLB?")) return;
-                try {
-                    const res = await fetch('https://statsapi.mlb.com/api/v1/teams/121/roster?rosterType=40Man');
-                    const data = await res.json();
-                    
-                    const batch = db.batch();
-                    // Map MLB positions to our app positions
-                    const posMap = { 'Pitcher': 'Pitcher', 'Catcher': 'Catcher', 'First Base': 'Infield', 'Second Base': 'Infield', 'Third Base': 'Infield', 'Shortstop': 'Infield', 'Outfielder': 'Outfield', 'Designated Hitter': 'DH' };
-                    
-                    data.roster.forEach(p => {
-                        const status = p.status.code === 'A' ? 'Active (30-Man)' : p.status.code.includes('D') ? 'Injured List (IL)' : '40-Man / Minors';
-                        const position = posMap[p.position.name] || 'Infield';
-                        const docRef = db.collection('mets_squad').doc(String(p.person.id));
-                        
-                        batch.set(docRef, {
-                            name: p.person.fullName,
-                            number: p.jerseyNumber,
-                            position: position,
-                            status: status,
-                            throws: 'R', // Default, would need player details fetch to be perfect
-                            mlbId: p.person.id,
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-                    });
-                    await batch.commit();
-                    alert("Roster Synced with MLB!");
-                } catch(e) { console.error(e); alert("Sync failed."); }
+            const handleLogout = () => {
+                auth.signOut();
             };
 
-            // --- TRANSACTION SYNC FUNCTION ---
-            const syncTransactions = async () => {
-                if(!confirm("Fetch official transactions from MLB (Last 90 days)?")) return;
-                try {
-                    // Start date 90 days ago
-                    const d = new Date();
-                    d.setDate(d.getDate() - 90);
-                    const startDate = d.toISOString().split('T')[0];
-                    const endDate = new Date().toISOString().split('T')[0];
+            const addRant = async (e) => { 
+                e.preventDefault(); 
+                if (!currentUser) return;
 
-                    const res = await fetch(`https://statsapi.mlb.com/api/v1/transactions?teamId=121&startDate=${startDate}&endDate=${endDate}`);
-                    const data = await res.json();
-                    
-                    const batch = db.batch();
-                    
-                    data.transactions.forEach(t => {
-                        let type = 'Signed';
-                        const desc = t.description.toLowerCase();
-                        
-                        if (desc.includes('trade')) {
-                            if (desc.includes('acquired')) type = 'Trade (Arrival)';
-                            else if (desc.includes('traded to')) type = 'Trade (Departure)';
-                            else type = 'Trade (Arrival)';
-                        }
-                        if (desc.includes('assigned') || desc.includes('optioned')) type = 'Optioned';
-                        if (desc.includes('designated for assignment')) type = 'DFA';
-                        if (desc.includes('placed on') && desc.includes('injured')) type = 'IL';
-                        if (desc.includes('claimed off waivers')) type = 'Waivers (Claimed)';
-                        if (desc.includes('lost') && desc.includes('waivers')) type = 'Waivers (Lost)';
-                        if (desc.includes('elected free agency')) type = 'Lost';
-                        
-                        const docRef = db.collection('mets_transactions').doc(String(t.id)); 
-                        
-                        batch.set(docRef, {
-                            type: type,
-                            player: t.person ? t.person.fullName : 'Team Move',
-                            fromTeam: 'MLB Wire',
-                            toTeam: 'Mets',
-                            notes: t.description,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-                    });
-                    
-                    await batch.commit();
-                    alert("Transactions Synced!");
-                } catch(e) { console.error(e); alert("Sync failed."); }
+                await db.collection('mets_rants').add({ 
+                    ...newRant, 
+                    date: new Date().toLocaleDateString(), 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    authorId: currentUser.uid,
+                    authorName: currentUser.displayName,
+                    authorPhoto: currentUser.photoURL
+                }); 
+                setNewRant({ topic: '', content: '', mood: 'Neutral' }); 
             };
-
-            // --- MANUAL ACTIONS ---
-            const addScheduleItem = async (e) => { e.preventDefault(); await db.collection('mets_schedule_2026').add({ ...newScheduleItem, season: currentSeasonYear }); setNewScheduleItem({ date: '', opponent: '', location: 'Home', time: '', gameType: 'Regular', result: 'Pending', scoreUs: '', scoreThem: '', links: [], notes: '' }); };
-            const updateScheduleItem = (id, data) => db.collection('mets_schedule_2026').doc(id).update(data);
-            const deleteScheduleItem = (id) => { if(confirm("Delete scheduled game?")) db.collection('mets_schedule_2026').doc(id).delete(); };
-
-            const addRant = async (e) => { e.preventDefault(); await db.collection('mets_rants').add({ ...newRant, date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }); setNewRant({ topic: '', content: '', mood: 'Neutral' }); };
+            
             const deleteRant = (id) => db.collection('mets_rants').doc(id).delete();
 
-            const addPlayer = async (e) => { e.preventDefault(); await db.collection('mets_roster').add({ ...newPlayer, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); setNewPlayer({ name: '', number: '', status: 'Hot', notes: '' }); };
-            const deletePlayer = (id) => db.collection('mets_roster').doc(id).delete();
-
-            const addSquadMember = async (e) => { e.preventDefault(); await db.collection('mets_squad').add({ ...newSquadMember, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); setNewSquadMember({ name: '', number: '', position: 'Pitcher', throws: 'R', status: 'Active (30-Man)', links: [] }); };
-            const updateSquadMember = (id, data) => db.collection('mets_squad').doc(id).update(data); 
-            const deleteSquadMember = (id) => { if(confirm("Remove player from squad?")) db.collection('mets_squad').doc(id).delete(); };
-
-            const addLink = async (e) => { e.preventDefault(); await db.collection('mets_links').add({ ...newLink, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); setNewLink({ title: '', url: '' }); };
-            const deleteLink = (id) => db.collection('mets_links').doc(id).delete();
-
-            const addTrans = async (e) => { 
-                e.preventDefault(); 
-                let playerName = newTrans.player;
-                if (['Lost', 'DFA', 'Trade (Departure)', 'Waivers (Lost)', 'Optioned'].includes(newTrans.type) && newTrans.playerId) {
-                    const selectedPlayer = squad.find(p => p.id === newTrans.playerId);
-                    if (selectedPlayer) { playerName = selectedPlayer.name; const newStatus = newTrans.type === 'Optioned' ? '40-Man / Minors' : 'Archived / Former Met'; await db.collection('mets_squad').doc(newTrans.playerId).update({ status: newStatus }); }
-                } else if (newTrans.type === 'IL' && newTrans.playerId) { const selectedPlayer = squad.find(p => p.id === newTrans.playerId); if (selectedPlayer) { playerName = selectedPlayer.name; await db.collection('mets_squad').doc(newTrans.playerId).update({ status: 'Injured List (IL)' }); }
-                } else if (newTrans.type === 'Promoted' && newTrans.playerId) { const selectedPlayer = squad.find(p => p.id === newTrans.playerId); if (selectedPlayer) { playerName = selectedPlayer.name; await db.collection('mets_squad').doc(newTrans.playerId).update({ status: 'Active (30-Man)' }); } }
-                
-                await db.collection('mets_transactions').add({ ...newTrans, player: playerName, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
-                setNewTrans({ type: 'Signed', playerId: '', player: '', fromTeam: '', toTeam: 'Mets', notes: '' }); 
-            };
-            const deleteTrans = (id) => db.collection('mets_transactions').doc(id).delete();
-            
-            const addChannel = async (data) => { await db.collection('mets_channels').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteChannel = (id) => { if(confirm("Remove channel?")) db.collection('mets_channels').doc(id).delete(); };
-
-            const addDatabaseItem = async (data) => { const collection = data.type === 'year' ? 'mets_db_years' : 'mets_db_players'; await db.collection(collection).add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const updateDatabaseItem = (id, data) => { const isYear = dbYears.find(y => y.id === id); const collection = isYear ? 'mets_db_years' : 'mets_db_players'; db.collection(collection).doc(id).update(data); };
-            const deleteDatabaseItem = (id) => { const isYear = dbYears.find(y => y.id === id); const collection = isYear ? 'mets_db_years' : 'mets_db_players'; if(confirm("Delete from archives?")) db.collection(collection).doc(id).delete(); }
-
-            const addNews = async (data) => { await db.collection('mets_news').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteNews = (id) => { if(confirm("Delete news item?")) db.collection('mets_news').doc(id).delete(); };
-
-            const initializeNextSeason = () => { const nextYear = (parseInt(currentSeasonYear) + 1).toString(); if (!availableSeasons.includes(nextYear)) { setAvailableSeasons([...availableSeasons, nextYear].sort()); } setCurrentSeasonYear(nextYear); };
             const wins = schedule2026.filter(g => g.result === 'W' && (g.gameType || 'Regular') === 'Regular' && (g.season || '2026') === currentSeasonYear).length;
             const losses = schedule2026.filter(g => g.result === 'L' && (g.gameType || 'Regular') === 'Regular' && (g.season || '2026') === currentSeasonYear).length;
 
@@ -1022,31 +756,31 @@
             return (
                 <div className="min-h-screen pb-10">
                     <div className="glass-panel sticky top-0 z-50 border-b border-white/10 mb-8">
-                        <div className="max-w-5xl mx-auto px-6 h-24 flex justify-between items-center">
-                            <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setActiveTab('home')}>
-                                <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-2xl shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
-                                    <span className="text-3xl">⚾</span>
+                        <div className="max-w-5xl mx-auto px-4 md:px-6 h-auto md:h-24 py-4 md:py-0 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-4 group cursor-pointer self-start md:self-auto" onClick={() => setActiveTab('home')}>
+                                <div className="bg-gradient-to-br from-orange-500 to-red-600 p-2 md:p-3 rounded-2xl shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
+                                    <span className="text-2xl md:text-3xl">⚾</span>
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-black text-white tracking-tight italic">Mets<span className="text-blue-500">Sky</span></h1>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">The New York Frame of Mind</p>
+                                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight italic">Mets<span className="text-blue-500">Sky</span></h1>
+                                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">The New York Frame of Mind</p>
                                 </div>
                             </div>
-                            <div className="flex gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar">
+                            <div className="w-full md:w-auto flex gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar">
                                 {['home', 'news', 'media', 'schedule', 'roster', 'moves', 'database', 'rants', 'links'].map(tab => (
                                     <button 
                                         key={tab}
                                         onClick={() => setActiveTab(tab)} 
-                                        className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === tab ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                                        className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                                     >
-                                        {tab === 'home' && <Icons.Home className="w-4 h-4"/>}
-                                        {tab === 'news' && <Icons.Newspaper className="w-4 h-4"/>}
-                                        {tab === 'media' && <Icons.Tv className="w-4 h-4"/>}
-                                        {tab === 'database' && <Icons.Database className="w-4 h-4"/>}
-                                        {tab === 'schedule' ? '2026 Season' : tab === 'moves' ? 'Transactions' : tab === 'news' ? 'Wire' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                        {tab === 'home' && <Icons.Home className="w-3 h-3 md:w-4 md:h-4"/>}
+                                        {tab === 'news' && <Icons.Newspaper className="w-3 h-3 md:w-4 md:h-4"/>}
+                                        {tab === 'media' && <Icons.Tv className="w-3 h-3 md:w-4 md:h-4"/>}
+                                        {tab === 'database' && <Icons.Database className="w-3 h-3 md:w-4 md:h-4"/>}
+                                        {tab === 'schedule' ? '2026 Season' : tab === 'moves' ? 'Transactions' : tab === 'news' ? 'Wire' : tab === 'rants' ? 'Fan Zone' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
                                 ))}
-                                <div className="ml-4 flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-l border-slate-700 pl-4"><div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 pulse-dot' : 'bg-red-500'}`}></div>{isOnline ? "LIVE" : "OFFLINE"}</div>
+                                <div className="ml-4 flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-l border-slate-700 pl-4 whitespace-nowrap"><div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 pulse-dot' : 'bg-red-500'}`}></div>{isOnline ? "LIVE" : "OFFLINE"}</div>
                             </div>
                         </div>
                     </div>
@@ -1109,7 +843,7 @@
 
                                     <button onClick={() => setActiveTab('rants')} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-red-500/50">
                                         <div className="p-4 bg-red-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.MessageSquare className="w-8 h-8 text-red-400"/></div>
-                                        <div className="font-black text-white text-lg uppercase tracking-wide">Vent</div>
+                                        <div className="font-black text-white text-lg uppercase tracking-wide">Fan Zone</div>
                                     </button>
 
                                     <button onClick={() => setActiveTab('links')} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-cyan-500/50">
@@ -1121,35 +855,34 @@
                         )}
 
                         {activeTab === 'news' && (
-                            <NewsBoard news={news} onAdd={addNews} onDelete={deleteNews} />
+                            <NewsBoard news={news} />
                         )}
 
                         {activeTab === 'media' && (
-                            <MediaBoard channels={channels} onAddChannel={addChannel} onDeleteChannel={deleteChannel} />
+                            <MediaBoard channels={channels} />
                         )}
 
                         {activeTab === 'database' && (
-                            <DatabaseBoard years={dbYears} players={dbPlayers} onAddItem={addDatabaseItem} onUpdateItem={updateDatabaseItem} onDeleteItem={deleteDatabaseItem} />
+                            <DatabaseBoard years={dbYears} players={dbPlayers} />
                         )}
                         
                         {activeTab === 'schedule' && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="flex justify-between items-end">
-                                    <div className="flex items-center gap-4">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <h2 className="text-2xl font-black text-white">{currentSeasonYear} Season Log</h2>
                                         <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
                                             <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular Season</button>
                                             <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring Training</button>
                                         </div>
-                                        <div className="h-6 w-px bg-white/10 mx-2"></div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="h-6 w-px bg-white/10 mx-2 hidden md:block"></div>
+                                        <div className="flex items-center gap-2 w-full md:w-auto">
                                             <select className="bg-slate-900/50 border border-white/10 rounded-lg p-1 text-xs font-bold text-white focus:outline-none" value={currentSeasonYear} onChange={(e) => setCurrentSeasonYear(e.target.value)}>
                                                 {availableSeasons.map(year => <option key={year} value={year}>{year}</option>)}
                                             </select>
-                                            <button onClick={syncSchedule} className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded hover:bg-orange-600/40 transition-colors border border-orange-600/30 flex items-center gap-1"><Icons.RefreshCw className="w-3 h-3"/> SYNC MLB</button>
                                         </div>
                                     </div>
-                                    <div className="glass-panel px-6 py-2 rounded-xl flex gap-6 text-sm font-bold border border-white/10">
+                                    <div className="glass-panel px-6 py-2 rounded-xl flex gap-6 text-sm font-bold border border-white/10 w-full md:w-auto justify-center">
                                         <span className="text-green-400">{wins} Wins</span>
                                         <span className="text-slate-600">|</span>
                                         <span className="text-red-400">{losses} Losses</span>
@@ -1168,41 +901,9 @@
                                     ))}
                                 </div>
 
-                                <div className="glass-panel p-6 rounded-3xl border border-blue-500/30">
-                                    <form onSubmit={addScheduleItem} className="flex gap-3 items-end">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Date</label>
-                                            <input type="date" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newScheduleItem.date} onChange={e => setNewScheduleItem({...newScheduleItem, date: e.target.value})} required />
-                                        </div>
-                                        <div className="w-24 space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Time</label>
-                                            <input type="time" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newScheduleItem.time} onChange={e => setNewScheduleItem({...newScheduleItem, time: e.target.value})} />
-                                        </div>
-                                        <div className="flex-[2] space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Opponent</label>
-                                            <input type="text" placeholder="e.g. Braves" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newScheduleItem.opponent} onChange={e => setNewScheduleItem({...newScheduleItem, opponent: e.target.value})} required />
-                                        </div>
-                                        <div className="w-32 space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Location</label>
-                                            <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newScheduleItem.location} onChange={e => setNewScheduleItem({...newScheduleItem, location: e.target.value})}>
-                                                <option value="Home">Home (Citi)</option>
-                                                <option value="Away">Away</option>
-                                            </select>
-                                        </div>
-                                        <div className="w-32 space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Type</label>
-                                            <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newScheduleItem.gameType} onChange={e => setNewScheduleItem({...newScheduleItem, gameType: e.target.value})}>
-                                                <option value="Regular">Regular</option>
-                                                <option value="Spring">Spring</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl shadow-lg h-[50px] w-[50px] flex items-center justify-center"><Icons.Plus className="w-6 h-6"/></button>
-                                    </form>
-                                </div>
-
                                 <div className="grid gap-3">
                                     {filteredGames.map(game => (
-                                        <ScheduleCard key={game.id} game={game} onUpdate={updateScheduleItem} onDelete={deleteScheduleItem} />
+                                        <ScheduleCard key={game.id} game={game} />
                                     ))}
                                     {filteredGames.length === 0 && <div className="text-center text-slate-500 py-12">No {scheduleMode} games scheduled for {filterMonth === 'All' ? currentSeasonYear : filterMonth}.</div>}
                                 </div>
@@ -1218,34 +919,6 @@
 
                                 {rosterMode === 'squad' && (
                                     <div className="space-y-6">
-                                        <div className="glass-panel p-6 rounded-3xl border border-slate-700">
-                                            <form onSubmit={addSquadMember} className="flex gap-4">
-                                                <input type="text" placeholder="Player Name" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.name} onChange={e => setNewSquadMember({...newSquadMember, name: e.target.value})} required />
-                                                <input type="text" placeholder="#" className="w-20 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.number} onChange={e => setNewSquadMember({...newSquadMember, number: e.target.value})} />
-                                                <select className="w-24 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.throws} onChange={e => setNewSquadMember({...newSquadMember, throws: e.target.value})}>
-                                                    <option value="R">R</option>
-                                                    <option value="L">L</option>
-                                                    <option value="S">S</option>
-                                                </select>
-                                                <select className="w-40 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.position} onChange={e => setNewSquadMember({...newSquadMember, position: e.target.value})}>
-                                                    <option value="Pitcher">Pitcher</option>
-                                                    <option value="Catcher">Catcher</option>
-                                                    <option value="Infield">Infield</option>
-                                                    <option value="Outfield">Outfield</option>
-                                                    <option value="DH">DH</option>
-                                                </select>
-                                                <select className="w-48 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.status} onChange={e => setNewSquadMember({...newSquadMember, status: e.target.value})}>
-                                                    <option value="Active (30-Man)">Active (30-Man)</option>
-                                                    <option value="40-Man / Minors">40-Man / Minors</option>
-                                                    <option value="Injured List (IL)">Injured List (IL)</option>
-                                                </select>
-                                                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl font-bold"><Icons.Plus className="w-6 h-6"/></button>
-                                            </form>
-                                            <div className="mt-4 flex justify-end">
-                                                <button onClick={syncRoster} className="text-xs bg-orange-600/20 text-orange-400 px-4 py-2 rounded-xl hover:bg-orange-600/40 transition-colors border border-orange-600/30 flex items-center gap-2 font-bold"><Icons.RefreshCw className="w-3 h-3"/> SYNC ACTIVE ROSTER</button>
-                                            </div>
-                                        </div>
-
                                         <h3 className="text-xl font-black text-white mt-8 mb-4 pl-2 border-l-4 border-blue-500">Active 30-Man Roster</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(pos => {
@@ -1256,7 +929,7 @@
                                                         <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{pos}s</div>
                                                         <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar">
                                                             {posPlayers.map(p => (
-                                                                <SquadMember key={p.id} member={p} onUpdate={updateSquadMember} onDelete={deleteSquadMember} />
+                                                                <SquadMember key={p.id} member={p} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1274,7 +947,7 @@
                                                         <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{pos}s</div>
                                                         <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar">
                                                             {posPlayers.map(p => (
-                                                                <SquadMember key={p.id} member={p} onUpdate={updateSquadMember} onDelete={deleteSquadMember} showStatus={true} />
+                                                                <SquadMember key={p.id} member={p} showStatus={true} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1286,7 +959,7 @@
                                         <div className="glass-panel rounded-3xl overflow-hidden border border-red-900/30 bg-red-900/5">
                                             <div className="divide-y divide-red-900/20">
                                                 {squad.filter(p => p.status === 'Injured List (IL)').map(p => (
-                                                    <SquadMember key={p.id} member={p} onUpdate={updateSquadMember} onDelete={deleteSquadMember} />
+                                                    <SquadMember key={p.id} member={p} />
                                                 ))}
                                                 {squad.filter(p => p.status === 'Injured List (IL)').length === 0 && <div className="p-4 text-center text-red-400/50 italic text-sm">No injuries. Don't jinx it.</div>}
                                             </div>
@@ -1296,7 +969,7 @@
                                         <div className="glass-panel rounded-3xl overflow-hidden border border-slate-800 bg-slate-900/50">
                                             <div className="divide-y divide-slate-800">
                                                 {squad.filter(p => p.status === 'Archived / Former Met').map(p => (
-                                                    <SquadMember key={p.id} member={p} onUpdate={updateSquadMember} onDelete={deleteSquadMember} isArchived={true} />
+                                                    <SquadMember key={p.id} member={p} isArchived={true} />
                                                 ))}
                                                 {squad.filter(p => p.status === 'Archived / Former Met').length === 0 && <div className="p-4 text-center text-slate-700 italic text-sm">No former players archived yet.</div>}
                                             </div>
@@ -1306,35 +979,8 @@
 
                                 {rosterMode === 'vibes' && (
                                     <>
-                                        <div className="glass-panel p-8 rounded-3xl border border-blue-500/30">
-                                            <h3 className="text-xl font-black text-white mb-6">Watch List & Hot Takes</h3>
-                                            <form onSubmit={addPlayer} className="flex gap-4 items-end">
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Player Name</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.name} onChange={e => setNewPlayer({...newPlayer, name: e.target.value})} required />
-                                                </div>
-                                                <div className="w-24 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Number</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.number} onChange={e => setNewPlayer({...newPlayer, number: e.target.value})} />
-                                                </div>
-                                                <div className="w-32 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Vibe Check</label>
-                                                    <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.status} onChange={e => setNewPlayer({...newPlayer, status: e.target.value})}>
-                                                        <option value="Hot">Hot 🔥</option>
-                                                        <option value="Cold">Cold 🧊</option>
-                                                        <option value="Trade">Trade 🔄</option>
-                                                    </select>
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Notes</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.notes} onChange={e => setNewPlayer({...newPlayer, notes: e.target.value})} placeholder="Why are they here?" />
-                                                </div>
-                                                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl shadow-lg h-[50px] w-[50px] flex items-center justify-center"><Icons.Plus className="w-6 h-6"/></button>
-                                            </form>
-                                        </div>
-
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {players.map(player => (<PlayerCard key={player.id} player={player} onDelete={deletePlayer} />))}
+                                            {players.map(player => (<PlayerCard key={player.id} player={player} />))}
                                             {players.length === 0 && <div className="col-span-full text-center text-slate-500 py-10">Watch list empty. Everyone is average?</div>}
                                         </div>
                                     </>
@@ -1344,75 +990,20 @@
 
                         {activeTab === 'moves' && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="glass-panel p-8 rounded-3xl">
-                                    <h3 className="text-xl font-black text-white mb-6">Transaction Wire</h3>
-                                    <form onSubmit={addTrans} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">Transaction Type</label>
-                                            <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.type} onChange={e => setNewTrans({...newTrans, type: e.target.value})}>
-                                                <option value="Signed">Signed (Arrival)</option>
-                                                <option value="Lost">Lost (Departure)</option>
-                                                <option value="Trade (Arrival)">Trade (Acquired)</option>
-                                                <option value="Trade (Departure)">Trade (Sent Away)</option>
-                                                <option value="DFA">DFA (Designated)</option>
-                                                <option value="Waivers (Claimed)">Waivers (Claimed)</option>
-                                                <option value="Waivers (Lost)">Waivers (Lost)</option>
-                                                <option value="Optioned">Optioned (Minors)</option>
-                                                <option value="Promoted">Promoted (Call Up)</option>
-                                                <option value="IL">IL (Injury)</option>
-                                                <option value="Extension">Extension</option>
-                                            </select>
-                                        </div>
-                                        
-                                        {['Signed', 'Trade (Arrival)', 'Waivers (Claimed)', 'Extension', 'Draft'].includes(newTrans.type) ? (
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] uppercase font-bold text-slate-500">Player Name (New/Ext)</label>
-                                                <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.player} onChange={e => setNewTrans({...newTrans, player: e.target.value})} placeholder="Name..." />
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] uppercase font-bold text-slate-500">Select Player (Roster)</label>
-                                                <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.playerId || ''} onChange={e => setNewTrans({...newTrans, playerId: e.target.value})}>
-                                                    <option value="">-- Select Player --</option>
-                                                    {squad.filter(p => p.status !== 'Archived / Former Met').map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} (#{p.number})</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">From Team</label>
-                                            <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.fromTeam} onChange={e => setNewTrans({...newTrans, fromTeam: e.target.value})} placeholder="Team..." />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500">To Team</label>
-                                            <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.toTeam} onChange={e => setNewTrans({...newTrans, toTeam: e.target.value})} placeholder="Team..." />
-                                        </div>
-                                        <div className="md:col-span-2 flex gap-4">
-                                            <input type="text" placeholder="Notes (Contract details, trade package...)" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newTrans.notes} onChange={e => setNewTrans({...newTrans, notes: e.target.value})} />
-                                            <button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg">Log Move</button>
-                                        </div>
-                                    </form>
-                                    <div className="mt-4 flex justify-end">
-                                        <button onClick={syncTransactions} className="text-xs bg-slate-700 text-slate-300 px-4 py-2 rounded-xl hover:bg-slate-600 transition-colors border border-slate-600 flex items-center gap-2 font-bold"><Icons.RefreshCw className="w-3 h-3"/> SYNC TRANSACTIONS</button>
-                                    </div>
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-green-400 uppercase tracking-widest border-b border-white/10 pb-2">Arrivals / Signed</h4>
-                                        {transactions.filter(t => ['Signed', 'Extension', 'Promoted', 'Trade (Arrival)', 'Waivers (Claimed)'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} onDelete={deleteTrans} />)}
+                                        {transactions.filter(t => ['Signed', 'Extension', 'Promoted', 'Trade (Arrival)', 'Waivers (Claimed)'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} />)}
                                         {transactions.filter(t => ['Signed', 'Extension', 'Promoted', 'Trade (Arrival)', 'Waivers (Claimed)'].includes(t.type)).length === 0 && <div className="text-sm text-slate-600 italic">Quiet offseason...</div>}
                                     </div>
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-red-400 uppercase tracking-widest border-b border-white/10 pb-2">Departures / Lost</h4>
-                                        {transactions.filter(t => ['Lost', 'DFA', 'IL', 'Optioned', 'Trade (Departure)', 'Waivers (Lost)'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} onDelete={deleteTrans} />)}
+                                        {transactions.filter(t => ['Lost', 'DFA', 'IL', 'Optioned', 'Trade (Departure)', 'Waivers (Lost)'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} />)}
                                         {transactions.filter(t => ['Lost', 'DFA', 'IL', 'Optioned', 'Trade (Departure)', 'Waivers (Lost)'].includes(t.type)).length === 0 && <div className="text-sm text-slate-600 italic">No one left yet.</div>}
                                     </div>
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest border-b border-white/10 pb-2">Trade Wire / Waivers</h4>
-                                        {transactions.filter(t => ['Trade Rumor/News'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} onDelete={deleteTrans} />)}
+                                        {transactions.filter(t => ['Trade Rumor/News'].includes(t.type)).map(t => <TransactionCard key={t.id} transaction={t} />)}
                                         {transactions.filter(t => ['Trade Rumor/News'].includes(t.type)).length === 0 && <div className="text-sm text-slate-600 italic">Rumor mill is quiet.</div>}
                                     </div>
                                 </div>
@@ -1422,40 +1013,56 @@
                         {activeTab === 'rants' && (
                             <div className="space-y-8 animate-fade-in">
                                 <div className="glass-panel p-6 rounded-3xl border border-orange-500/30">
-                                    <h3 className="text-lg font-black text-white mb-4">Vent Station</h3>
-                                    <form onSubmit={addRant} className="flex flex-col gap-4">
-                                        <div className="flex gap-4">
-                                            <input type="text" placeholder="Topic (e.g. The Bullpen, The Umpire)" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required />
-                                            <select className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-orange-500" value={newRant.mood} onChange={e => setNewRant({...newRant, mood: e.target.value})}>
-                                                <option value="Neutral">Neutral</option>
-                                                <option value="Happy">Happy / Hype</option>
-                                                <option value="Angry">Angry / Doomer</option>
-                                            </select>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-lg font-black text-white">Fan Zone Message Board</h3>
+                                        {currentUser && (
+                                            <button onClick={handleLogout} className="text-xs text-red-400 flex items-center gap-2 hover:text-red-300">
+                                                <Icons.LogOut className="w-4 h-4"/> Sign Out
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    {!currentUser ? (
+                                        <div className="text-center py-8">
+                                            <p className="text-slate-400 mb-4 text-sm">Sign in with Google to post your rant.</p>
+                                            <button 
+                                                onClick={handleGoogleLogin} 
+                                                className="bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center gap-3 mx-auto hover:bg-slate-200 transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                                Sign in with Google
+                                            </button>
                                         </div>
-                                        <textarea placeholder="Let it all out..." className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white h-32 focus:outline-none focus:border-orange-500" value={newRant.content} onChange={e => setNewRant({...newRant, content: e.target.value})} required />
-                                        <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-600/20 transition-all">Post Rant</button>
-                                    </form>
+                                    ) : (
+                                        <form onSubmit={addRant} className="flex flex-col gap-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                {currentUser.photoURL && <img src={currentUser.photoURL} className="w-8 h-8 rounded-full border border-white/20"/>}
+                                                <span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName}</strong></span>
+                                            </div>
+                                            <div className="flex flex-col md:flex-row gap-4">
+                                                <input type="text" placeholder="Topic (e.g. The Bullpen, The Umpire)" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required />
+                                                <select className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white w-full md:w-auto focus:outline-none focus:border-orange-500" value={newRant.mood} onChange={e => setNewRant({...newRant, mood: e.target.value})}>
+                                                    <option value="Neutral">Neutral</option>
+                                                    <option value="Happy">Happy / Hype</option>
+                                                    <option value="Angry">Angry / Doomer</option>
+                                                </select>
+                                            </div>
+                                            <textarea placeholder="Let it all out..." className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white h-32 focus:outline-none focus:border-orange-500" value={newRant.content} onChange={e => setNewRant({...newRant, content: e.target.value})} required />
+                                            <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-600/20 transition-all">Post Rant</button>
+                                        </form>
+                                    )}
                                 </div>
 
                                 <div className="grid gap-4">
-                                    {rants.map(rant => (<RantCard key={rant.id} rant={rant} onDelete={deleteRant} />))}
+                                    {rants.map(rant => (<RantCard key={rant.id} rant={rant} currentUser={currentUser} onDelete={deleteRant} />))}
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'links' && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="glass-panel p-8 rounded-3xl">
-                                    <h3 className="text-xl font-black text-white mb-6">Receipts & Links</h3>
-                                    <form onSubmit={addLink} className="flex gap-4">
-                                        <input type="text" placeholder="Title (e.g. SNY News)" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newLink.title} onChange={e => setNewLink({...newLink, title: e.target.value})} required />
-                                        <input type="text" placeholder="URL (https://...)" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newLink.url} onChange={e => setNewLink({...newLink, url: e.target.value})} required />
-                                        <button type="submit" className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-xl">Add Link</button>
-                                    </form>
-                                </div>
-
                                 <div className="grid gap-3">
-                                    {links.map(link => (<LinkCard key={link.id} link={link} onDelete={deleteLink} />))}
+                                    {links.map(link => (<LinkCard key={link.id} link={link} />))}
                                     {links.length === 0 && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>}
                                 </div>
                             </div>
