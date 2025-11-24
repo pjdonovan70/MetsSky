@@ -14,7 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        /* ADDED overflow-x: hidden and width: 100vw to prevent side scrolling */
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; background-image: radial-gradient(at 0% 0%, #002D72 0, transparent 50%), radial-gradient(at 100% 100%, #FF5910 0, transparent 50%); background-attachment: fixed; overflow-x: hidden; width: 100vw; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
         .mets-orange { color: #FF5910; }
@@ -318,19 +317,60 @@
             </div>
         );
 
-        // --- PLAYER CARD (READ ONLY) ---
-        const PlayerCard = ({ player }) => (
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 relative group hover:border-blue-500/50 transition-all">
-                <div className="flex items-center gap-4">
-                    <div className={`h-12 w-12 rounded-full flex items-center justify-center font-black text-lg border-2 ${player.status === 'Hot' ? 'border-green-500 text-green-400 bg-green-900/20' : player.status === 'Cold' ? 'border-blue-400 text-blue-300 bg-blue-900/20' : 'border-red-500 text-red-400 bg-red-900/20'}`}>{player.number}</div>
-                    <div>
-                        <div className="font-bold text-white text-lg">{player.name}</div>
-                        <div className={`text-xs font-bold uppercase tracking-wider ${player.status === 'Hot' ? 'text-green-400' : player.status === 'Cold' ? 'text-blue-400' : 'text-red-400'}`}>{player.status === 'Trade' ? 'TRADE BAIT' : player.status}</div>
+        // --- PLAYER CARD (EDITABLE) ---
+        const PlayerCard = ({ player, onUpdate, onDelete }) => {
+            const [isEditing, setIsEditing] = useState(false);
+            const [editData, setEditData] = useState(player);
+
+            const handleSave = () => {
+                onUpdate(player.id, editData);
+                setIsEditing(false);
+            };
+
+            if (isEditing) {
+                return (
+                    <div className="glass-panel p-4 rounded-2xl border border-blue-500/50 relative">
+                        <div className="grid gap-2 mb-2">
+                             <div className="flex gap-2">
+                                <input type="text" className="w-16 bg-slate-800 border border-white/10 rounded p-1 text-center text-white" value={editData.number} onChange={e => setEditData({...editData, number: e.target.value})} placeholder="#" />
+                                <input type="text" className="flex-1 bg-slate-800 border border-white/10 rounded p-1 text-white" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} placeholder="Name" />
+                             </div>
+                             <select className="bg-slate-800 border border-white/10 rounded p-1 text-white text-xs" value={editData.status} onChange={e => setEditData({...editData, status: e.target.value})}>
+                                <option value="Hot">Hot 🔥</option>
+                                <option value="Cold">Cold 🧊</option>
+                                <option value="Trade">Trade 🔄</option>
+                             </select>
+                             <input type="text" className="bg-slate-800 border border-white/10 rounded p-1 text-white text-xs" value={editData.addedBy} onChange={e => setEditData({...editData, addedBy: e.target.value})} placeholder="Added by..." />
+                             <textarea className="bg-slate-800 border border-white/10 rounded p-1 text-white text-xs" value={editData.notes} onChange={e => setEditData({...editData, notes: e.target.value})} rows="2"></textarea>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                             <button onClick={() => onDelete(player.id)} className="text-xs text-red-400 border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/20">Delete</button>
+                             <div className="flex gap-2">
+                                 <button onClick={() => setIsEditing(false)} className="text-xs text-slate-400 px-2 py-1">Cancel</button>
+                                 <button onClick={handleSave} className="text-xs bg-green-600 text-white px-3 py-1 rounded font-bold">Save</button>
+                             </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="glass-panel p-4 rounded-2xl border border-white/10 relative group hover:border-blue-500/50 transition-all">
+                    <button onClick={() => setIsEditing(true)} className="absolute top-2 right-2 text-slate-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Edit2 className="w-4 h-4" /></button>
+                    <div className="flex items-center gap-4">
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center font-black text-lg border-2 ${player.status === 'Hot' ? 'border-green-500 text-green-400 bg-green-900/20' : player.status === 'Cold' ? 'border-blue-400 text-blue-300 bg-blue-900/20' : 'border-red-500 text-red-400 bg-red-900/20'}`}>{player.number}</div>
+                        <div>
+                            <div className="font-bold text-white text-lg">{player.name}</div>
+                            <div className={`text-xs font-bold uppercase tracking-wider ${player.status === 'Hot' ? 'text-green-400' : player.status === 'Cold' ? 'text-blue-400' : 'text-red-400'}`}>{player.status === 'Trade' ? 'TRADE BAIT' : player.status}</div>
+                        </div>
+                    </div>
+                    <div className="mt-3 text-sm text-slate-400 border-t border-white/5 pt-2">
+                        {player.notes}
+                        {player.addedBy && <div className="text-[10px] text-slate-500 mt-2 font-bold text-right">via {player.addedBy}</div>}
                     </div>
                 </div>
-                <div className="mt-3 text-sm text-slate-400 border-t border-white/5 pt-2">{player.notes}</div>
-            </div>
-        );
+            );
+        };
 
         // --- LINK CARD (READ ONLY) ---
         const LinkCard = ({ link }) => (
@@ -615,6 +655,7 @@
             
             // Inputs
             const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
+            const [newPlayer, setNewPlayer] = useState({ name: '', number: '', status: 'Hot', notes: '', addedBy: '' });
 
             // Auth & Data
             useEffect(() => {
@@ -625,10 +666,6 @@
                             setCurrentUser(user);
                         } else {
                             setCurrentUser(null);
-                            // Only sign in anonymously if they aren't signed in via Google
-                            // but wait, we want message board to require login.
-                            // For now, we can just leave them signed out or sign in anon for read access if strict rules applied.
-                            // Since we aren't using strict rules, we can just track user state.
                         }
                     });
                     
@@ -734,6 +771,15 @@
             
             const deleteRant = (id) => db.collection('mets_rants').doc(id).delete();
 
+            // --- VIBE CHECK (Watch List) FUNCTIONS ---
+            const addPlayer = async (e) => { 
+                e.preventDefault(); 
+                await db.collection('mets_roster').add({ ...newPlayer, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
+                setNewPlayer({ name: '', number: '', status: 'Hot', notes: '', addedBy: '' }); 
+            };
+            const updatePlayer = (id, data) => db.collection('mets_roster').doc(id).update(data);
+            const deletePlayer = (id) => { if(confirm("Remove from Vibe Check?")) db.collection('mets_roster').doc(id).delete(); };
+
             const wins = schedule2026.filter(g => g.result === 'W' && (g.gameType || 'Regular') === 'Regular' && (g.season || '2026') === currentSeasonYear).length;
             const losses = schedule2026.filter(g => g.result === 'L' && (g.gameType || 'Regular') === 'Regular' && (g.season || '2026') === currentSeasonYear).length;
 
@@ -790,6 +836,10 @@
                         {activeTab === 'home' && (
                             <div className="animate-fade-in space-y-10">
                                 
+                                <a href="https://bsky.app/hashtag/MetsSky" target="_blank" className="block w-full bg-gradient-to-r from-sky-600 to-blue-700 p-3 rounded-xl text-center text-white font-bold tracking-wider uppercase shadow-lg mb-6 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                                    <Icons.Cloud className="w-5 h-5" /> Visit us on Bluesky
+                                </a>
+
                                 <CountdownTicket />
 
                                 <div className="relative h-96 rounded-3xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-900 to-slate-900 border border-white/10 shadow-2xl group">
@@ -983,8 +1033,39 @@
 
                                 {rosterMode === 'vibes' && (
                                     <>
+                                        <div className="glass-panel p-8 rounded-3xl border border-blue-500/30 mb-6">
+                                            <h3 className="text-xl font-black text-white mb-6">Add to Watch List</h3>
+                                            <form onSubmit={addPlayer} className="flex gap-4 items-end flex-wrap md:flex-nowrap">
+                                                <div className="flex-1 space-y-1 w-full">
+                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Player Name</label>
+                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.name} onChange={e => setNewPlayer({...newPlayer, name: e.target.value})} required />
+                                                </div>
+                                                <div className="w-24 space-y-1">
+                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Number</label>
+                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.number} onChange={e => setNewPlayer({...newPlayer, number: e.target.value})} />
+                                                </div>
+                                                <div className="w-32 space-y-1">
+                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Vibe Check</label>
+                                                    <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.status} onChange={e => setNewPlayer({...newPlayer, status: e.target.value})}>
+                                                        <option value="Hot">Hot 🔥</option>
+                                                        <option value="Cold">Cold 🧊</option>
+                                                        <option value="Trade">Trade 🔄</option>
+                                                    </select>
+                                                </div>
+                                                <div className="w-32 space-y-1">
+                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Your Name</label>
+                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.addedBy} onChange={e => setNewPlayer({...newPlayer, addedBy: e.target.value})} placeholder="Name" />
+                                                </div>
+                                                <div className="flex-1 space-y-1 w-full">
+                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Notes</label>
+                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.notes} onChange={e => setNewPlayer({...newPlayer, notes: e.target.value})} placeholder="Why are they here?" />
+                                                </div>
+                                                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl shadow-lg h-[50px] w-[50px] flex items-center justify-center"><Icons.Plus className="w-6 h-6"/></button>
+                                            </form>
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {players.map(player => (<PlayerCard key={player.id} player={player} />))}
+                                            {players.map(player => (<PlayerCard key={player.id} player={player} onUpdate={updatePlayer} onDelete={deletePlayer} />))}
                                             {players.length === 0 && <div className="col-span-full text-center text-slate-500 py-10">Watch list empty. Everyone is average?</div>}
                                         </div>
                                     </>
