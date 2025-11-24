@@ -756,7 +756,13 @@
         };
 
         function App() {
-            const [activeTab, setActiveTab] = useState('home');
+            // Initialize activeTab from the URL hash (minus the #) or default to 'home'
+            const [activeTab, setActiveTab] = useState(() => {
+                const hash = window.location.hash.slice(1);
+                const validTabs = ['home', 'news', 'blog', 'media', 'schedule', 'roster', 'moves', 'database', 'rants', 'links'];
+                return validTabs.includes(hash) ? hash : 'home';
+            });
+
             const [rosterMode, setRosterMode] = useState('squad'); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
             const [filterMonth, setFilterMonth] = useState('All'); 
@@ -779,6 +785,24 @@
             const [blogPosts, setBlogPosts] = useState([]); 
             const [isOnline, setIsOnline] = useState(false); 
             const [loading, setLoading] = useState(true);
+            
+            // Sync URL hash when activeTab changes
+            useEffect(() => {
+                window.location.hash = activeTab;
+            }, [activeTab]);
+
+            // Handle Back/Forward browser buttons
+            useEffect(() => {
+                const onHashChange = () => {
+                    const hash = window.location.hash.slice(1);
+                    const validTabs = ['home', 'news', 'blog', 'media', 'schedule', 'roster', 'moves', 'database', 'rants', 'links'];
+                    if (validTabs.includes(hash)) {
+                        setActiveTab(hash);
+                    }
+                };
+                window.addEventListener('hashchange', onHashChange);
+                return () => window.removeEventListener('hashchange', onHashChange);
+            }, []);
             
             // Inputs
             const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
