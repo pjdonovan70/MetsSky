@@ -631,7 +631,30 @@
         };
 
         function App() {
-            const [activeTab, setActiveTab] = useState('home');
+            // --- ROUTING LOGIC (Read hash on load) ---
+            const [activeTab, setActiveTab] = useState(() => {
+                const hash = window.location.hash.slice(1);
+                const validTabs = ['home', 'news', 'media', 'schedule', 'roster', 'moves', 'database', 'rants', 'links'];
+                return validTabs.includes(hash) ? hash : 'home';
+            });
+
+            // --- SYNC HASH ON TAB CHANGE ---
+            useEffect(() => {
+                window.location.hash = activeTab;
+            }, [activeTab]);
+
+            // --- HANDLE BACK BUTTON ---
+            useEffect(() => {
+                const handleHashChange = () => {
+                    const hash = window.location.hash.slice(1);
+                    if (['home', 'news', 'media', 'schedule', 'roster', 'moves', 'database', 'rants', 'links'].includes(hash)) {
+                        setActiveTab(hash);
+                    }
+                };
+                window.addEventListener('hashchange', handleHashChange);
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, []);
+
             const [rosterMode, setRosterMode] = useState('squad'); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
             const [filterMonth, setFilterMonth] = useState('All'); 
