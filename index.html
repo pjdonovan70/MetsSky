@@ -1484,34 +1484,6 @@
 
                                 {rosterMode === 'squad' && (
                                     <div className="space-y-6">
-                                        <div className="glass-panel p-6 rounded-3xl border border-slate-700">
-                                            <form onSubmit={addSquadMember} className="flex gap-4">
-                                                <input type="text" placeholder="Player Name" className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.name} onChange={e => setNewSquadMember({...newSquadMember, name: e.target.value})} required />
-                                                <input type="text" placeholder="#" className="w-20 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.number} onChange={e => setNewSquadMember({...newSquadMember, number: e.target.value})} />
-                                                <select className="w-24 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.throws} onChange={e => setNewSquadMember({...newSquadMember, throws: e.target.value})}>
-                                                    <option value="R">R</option>
-                                                    <option value="L">L</option>
-                                                    <option value="S">S</option>
-                                                </select>
-                                                <select className="w-40 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.position} onChange={e => setNewSquadMember({...newSquadMember, position: e.target.value})}>
-                                                    <option value="Pitcher">Pitcher</option>
-                                                    <option value="Catcher">Catcher</option>
-                                                    <option value="Infield">Infield</option>
-                                                    <option value="Outfield">Outfield</option>
-                                                    <option value="DH">DH</option>
-                                                </select>
-                                                <select className="w-48 bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" value={newSquadMember.status} onChange={e => setNewSquadMember({...newSquadMember, status: e.target.value})}>
-                                                    <option value="Active (30-Man)">Active (30-Man)</option>
-                                                    <option value="40-Man / Minors">40-Man / Minors</option>
-                                                    <option value="Injured List (IL)">Injured List (IL)</option>
-                                                </select>
-                                                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl font-bold"><Icons.Plus className="w-6 h-6"/></button>
-                                            </form>
-                                            <div className="mt-4 flex justify-end">
-                                                <button onClick={syncRoster} className="text-xs bg-orange-600/20 text-orange-400 px-4 py-2 rounded-xl hover:bg-orange-600/40 transition-colors border border-orange-600/30 flex items-center gap-2 font-bold"><Icons.RefreshCw className="w-3 h-3"/> SYNC ACTIVE ROSTER</button>
-                                            </div>
-                                        </div>
-
                                         <h3 className="text-xl font-black text-white mt-8 mb-4 pl-2 border-l-4 border-blue-500">Active 30-Man Roster</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(pos => {
@@ -1572,33 +1544,7 @@
 
                                 {rosterMode === 'vibes' && (
                                     <>
-                                        <div className="glass-panel p-8 rounded-3xl border border-blue-500/30">
-                                            <h3 className="text-xl font-black text-white mb-6">Watch List & Hot Takes</h3>
-                                            <form onSubmit={addPlayer} className="flex gap-4 items-end">
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Player Name</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.name} onChange={e => setNewPlayer({...newPlayer, name: e.target.value})} required />
-                                                </div>
-                                                <div className="w-24 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Number</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.number} onChange={e => setNewPlayer({...newPlayer, number: e.target.value})} />
-                                                </div>
-                                                <div className="w-32 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Vibe Check</label>
-                                                    <select className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.status} onChange={e => setNewPlayer({...newPlayer, status: e.target.value})}>
-                                                        <option value="Hot">Hot 🔥</option>
-                                                        <option value="Cold">Cold 🧊</option>
-                                                        <option value="Trade">Trade 🔄</option>
-                                                    </select>
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-[10px] uppercase font-bold text-slate-500">Notes</label>
-                                                    <input type="text" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500" value={newPlayer.notes} onChange={e => setNewPlayer({...newPlayer, notes: e.target.value})} placeholder="Why are they here?" />
-                                                </div>
-                                                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl shadow-lg h-[50px] w-[50px] flex items-center justify-center"><Icons.Plus className="w-6 h-6"/></button>
-                                            </form>
-                                        </div>
-
+                                        <h3 className="text-xl font-black text-white mb-6">Watch List & Hot Takes</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {players.map(player => (<PlayerCard key={player.id} player={player} onDelete={deletePlayer} />))}
                                             {players.length === 0 && <div className="col-span-full text-center text-slate-500 py-10">Watch list empty. Everyone is average?</div>}
