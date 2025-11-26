@@ -1,69 +1,80 @@
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-console.log("--- STARTING UNIVERSAL LOADER ---");
+console.log("--- STARTING UNIVERSAL LOADER + BLUESKY ---");
 
+// --- DECODE KEY ---
 const secret = process.env.FIREBASE_SERVICE_ACCOUNT;
-
-if (!secret) {
-    console.error("❌ FATAL: The 'FIREBASE_SERVICE_ACCOUNT' secret is empty in GitHub Settings.");
-    process.exit(1);
-}
-
-console.log(`Input length: ${secret.length} characters.`);
+if (!secret) { console.error("❌ FATAL: Secret is empty."); process.exit(1); }
 
 let serviceAccount;
-
-// ATTEMPT 1: Try reading it as a 'Magic String' (Base64)
 try {
     const decoded = Buffer.from(secret, 'base64').toString('ascii');
-    // If decoding creates a valid JSON string, parse it
     if (decoded.trim().startsWith('{')) {
         serviceAccount = JSON.parse(decoded);
-        console.log("✅ SUCCESS: Detected and loaded 'Magic String' (Base64) key.");
     } else {
         throw new Error("Not Base64");
     }
-} catch (e1) {
-    // ATTEMPT 2: Try reading it as normal JSON (Raw text)
+} catch (e) {
     try {
         serviceAccount = JSON.parse(secret);
-        console.log("✅ SUCCESS: Detected and loaded Raw JSON key.");
     } catch (e2) {
-        console.error("❌ ERROR: Could not read the key in ANY format.");
-        
-        // Diagnosis helper
-        const trimmed = secret.trim();
-        if (trimmed.startsWith('{')) {
-             if (!trimmed.endsWith('}')) {
-                 console.error("👉 DIAGNOSIS: It looks like Raw JSON, but the end is missing.");
-                 console.error("👉 You likely missed the final '}' curly brace when copying.");
-             } else {
-                 console.error("👉 DIAGNOSIS: The JSON syntax is broken. Check for extra quotes or missing commas.");
-             }
-        } else {
-            console.error("👉 DIAGNOSIS: The key doesn't look like JSON. Did you paste the right file?");
-        }
-        
+        console.error("❌ ERROR: Could not read key.");
         process.exit(1);
     }
 }
 
-// Initialize Firebase with the result from above
-try {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log("✅ Firebase Connection Established.");
-} catch (e) {
-    console.error("❌ FIREBASE ERROR:", e.message);
-    process.exit(1);
-}
-
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 const METS_ID = 121;
 const YEAR = 2026; 
 
+// --- 1. BLUESKY FUNCTION ---
+async function updateBluesky() {
+    console.log("Fetching #MetsSky from Bluesky...");
+    // Search for the hashtag, limit to 25 latest posts
+    const url = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=%23MetsSky&limit=25&sort=latest";
+
+    try {
+        const res = await axios.get(url);
+        const posts = res.data.posts || [];
+        const batch = db.batch();
+
+        posts.forEach(post => {
+            // Create a unique ID from the Bluesky URI
+            const id = post.uri.split('/').pop();
+            const docRef = db.collection('mets_social').doc(id);
+
+            // Extract image if it exists
+            let imageUrl = null;
+            if (post.embed && post.embed.images && post.embed.images.length > 0) {
+                imageUrl = post.embed.images[0].fullsize;
+            }
+
+            // Construct the public link
+            const handle = post.author.handle;
+            const postLink = `https://bsky.app/profile/${handle}/post/${id}`;
+
+            batch.set(docRef, {
+                authorName: post.author.displayName || handle,
+                authorHandle: handle,
+                avatar: post.author.avatar || null,
+                text: post.record.text,
+                postedAt: post.record.createdAt,
+                imageUrl: imageUrl,
+                url: postLink,
+                type: 'Bluesky'
+            }, { merge: true });
+        });
+
+        await batch.commit();
+        console.log(`✅ Updated ${posts.length} Bluesky posts.`);
+    } catch (error) {
+        console.error("❌ Error fetching Bluesky:", error.message);
+    }
+}
+
+// --- 2. SCHEDULE FUNCTION ---
 async function updateSchedule() {
   console.log("Fetching Schedule...");
   const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${METS_ID}&season=${YEAR}&hydrate=team,linescore`;
@@ -71,12 +82,6 @@ async function updateSchedule() {
   try {
     const res = await axios.get(url);
     const dates = res.data.dates || [];
-    
-    if (dates.length === 0) {
-        console.log("No games found (Offseason?).");
-        return;
-    }
-
     const batch = db.batch();
     
     dates.forEach(d => {
@@ -110,13 +115,13 @@ async function updateSchedule() {
     });
 
     await batch.commit();
-    console.log(`Updated ${dates.length} games.`);
+    console.log(`✅ Updated ${dates.length} games.`);
   } catch (error) {
-    console.error("Error updating schedule:", error);
-    process.exit(1);
+    console.error("❌ Error updating schedule:", error.message);
   }
 }
 
+// --- 3. ROSTER FUNCTION ---
 async function updateRoster() {
   console.log("Fetching Roster...");
   const url = `https://statsapi.mlb.com/api/v1/teams/${METS_ID}/roster`;
@@ -124,12 +129,10 @@ async function updateRoster() {
   try {
     const res = await axios.get(url);
     const roster = res.data.roster || [];
-    
     const batch = db.batch();
 
     roster.forEach(p => {
       const docRef = db.collection('mets_squad').doc(String(p.person.id));
-      
       batch.set(docRef, {
         name: p.person.fullName,
         number: p.jerseyNumber,
@@ -140,15 +143,16 @@ async function updateRoster() {
     });
 
     await batch.commit();
-    console.log(`Updated ${roster.length} players.`);
+    console.log(`✅ Updated ${roster.length} players.`);
   } catch (error) {
-    console.error("Error updating roster:", error);
+    console.error("❌ Error updating roster:", error.message);
   }
 }
 
 async function run() {
   await updateSchedule();
   await updateRoster();
+  await updateBluesky(); // <--- Running the new function
   process.exit(0);
 }
 
