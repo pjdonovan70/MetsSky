@@ -1,11 +1,6 @@
 {
-  "name": "metssky-auto-updater",
+  "name": "metssky-updater",
   "version": "1.0.0",
-  "description": "Automated stats updater",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "dependencies": {
     "axios": "^1.6.0",
     "firebase-admin": "^11.11.0"
