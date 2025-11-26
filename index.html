@@ -15,7 +15,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; background-image: radial-gradient(at 0% 0%, #002D72 0, transparent 50%), radial-gradient(at 100% 100%, #FF5910 0, transparent 50%); background-attachment: fixed; }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
@@ -208,7 +208,8 @@
             const isWin = game.result && (game.result.includes('W') || (game.score && parseInt(game.score.split('-')[0]) > parseInt(game.score.split('-')[1])));
             const isLoss = game.result && game.result.includes('L');
             return (
-                <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all">
+                // CHANGED: Removed 'glass-panel' and added 'bg-slate-900/50' to prevent mobile GPU crash on long lists
+                <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all">
                     <div className="flex items-center gap-4">
                         <div className="w-12 text-center">
                             <div className="text-[10px] text-slate-500 font-bold uppercase">{game.date ? new Date(game.date).toLocaleDateString(undefined, {month:'short'}) : ''}</div>
@@ -420,13 +421,13 @@
                         <div className="bg-green-600 p-2 rounded-lg"><Icons.RefreshCw className="w-6 h-6 text-white"/></div>
                         <div>
                             <h2 className="text-2xl font-black text-white">Transaction Wire</h2>
-                            <p className="text-xs text-slate-400">Official MLB Data Feed • Last 6 Months</p>
+                            <p className="text-xs text-slate-400">Official MLB Data Feed • Last 50 Moves</p>
                         </div>
                     </div>
                     
                     <div className="space-y-3">
                         {(transactions || []).map((t, i) => (
-                            <div key={i} className="glass-panel p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex gap-4 items-start">
+                            <div key={i} className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex gap-4 items-start">
                                 <div className={`p-2 rounded-xl border ${getColor(t.description)}`}>
                                     {getIcon(t.description)}
                                 </div>
@@ -507,7 +508,8 @@
                         if(data.transactions) {
                             // Sort by date desc
                             const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date));
-                            setApiTransactions(sorted.map(t => ({
+                            // FIX: Slice to 50 to prevent mobile crash
+                            setApiTransactions(sorted.slice(0, 50).map(t => ({
                                 date: t.date,
                                 description: t.description,
                                 player: t.person ? t.person.fullName : null,
@@ -524,16 +526,12 @@
                             setSocialPosts(dbPosts);
                         } else {
                             try {
-                                // 1. Define Feeds: Try RSSHub for hashtag, Fallback to Official Accounts
                                 const feeds = [
-                                    // HASHTAG ATTEMPT (via RSSHub Bridge)
                                     { url: 'https://rsshub.app/bluesky/search/MetsSky', type: 'hashtag' },
-                                    // FALLBACKS (Official Accounts)
                                     { url: 'https://bsky.app/profile/mets.bsky.social/rss', type: 'official' },
                                     { url: 'https://bsky.app/profile/sny.tv/rss', type: 'official' }
                                 ];
 
-                                // 2. Convert to API Calls
                                 const requests = feeds.map(f => {
                                     const encoded = encodeURIComponent(f.url);
                                     return fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encoded}`)
@@ -549,7 +547,6 @@
                                     if (res.status === 'ok' && res.data && res.data.items) {
                                         const cleanPosts = res.data.items.map(i => ({
                                             id: i.guid || Math.random().toString(),
-                                            // Make author name cleaner
                                             authorName: i.author || res.data.feed.title.replace(' / Bluesky', '').replace('Bluesky search ', '#'),
                                             authorHandle: "bluesky",
                                             text: i.title || i.description, 
@@ -561,14 +558,12 @@
                                     }
                                 });
 
-                                // 3. Filter duplicates and Sort
                                 const uniquePosts = Array.from(new Map(combinedPosts.map(item => [item.text, item])).values());
                                 uniquePosts.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
 
                                 if (uniquePosts.length > 0) {
                                     setSocialPosts(uniquePosts);
                                 } else {
-                                    // 4. Ultimate Fallback if everything is blocked
                                     setSocialPosts([{
                                         id: 'system-msg',
                                         authorName: "MetsSky System",
@@ -595,11 +590,29 @@
                     db.collection('mets_news').orderBy('date', 'desc').onSnapshot(async (s) => {
                         const manualNews = s.docs.map(d => ({ id: d.id, ...d.data(), source: 'Manual' }));
                         try {
-                            const rssUrls = ['https://api.rss2json.com/v1/api.json?rss_url=https://sports.yahoo.com/mlb/teams/nym/rss.xml','https://api.rss2json.com/v1/api.json?rss_url=https://www.mlb.com/mets/feeds/news/rss.xml'];
+                            // Added timestamp to URL to force fresh fetch and avoid caching old news
+                            const rssUrls = [
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://sports.yahoo.com/mlb/teams/nym/rss.xml&t=${Date.now()}`,
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://www.mlb.com/mets/feeds/news/rss.xml&t=${Date.now()}`
+                            ];
                             const responses = await Promise.all(rssUrls.map(url => fetch(url).then(res => res.json()).catch(e=>null)));
                             let liveArticles = [];
-                            responses.forEach(feed => { if(feed && feed.status === 'ok' && feed.items) { liveArticles.push(...feed.items.map(i => ({ id: i.guid||i.link, title: i.title, url: i.link, date: i.pubDate?.split(' ')[0]||'', type: 'Live Feed', source: feed.feed.title }))); }});
-                            setNews([...manualNews, ...liveArticles].sort((a, b) => new Date(b.date) - new Date(a.date)));
+                            responses.forEach(feed => { 
+                                if(feed && feed.status === 'ok' && feed.items) { 
+                                    liveArticles.push(...feed.items.map(i => ({ 
+                                        id: i.guid||i.link, 
+                                        title: i.title, 
+                                        url: i.link, 
+                                        // Store full pubDate for sorting, but keep display format logic in renderer
+                                        date: i.pubDate || new Date().toISOString(), 
+                                        type: 'Live Feed', 
+                                        source: feed.feed.title 
+                                    }))); 
+                                }
+                            });
+                            // Improved sorting: Ensure we use the full date object/string for comparison
+                            const combined = [...manualNews, ...liveArticles].sort((a, b) => new Date(b.date) - new Date(a.date));
+                            setNews(combined);
                         } catch (err) { setNews(manualNews); }
                     });
                     setLoading(false);
