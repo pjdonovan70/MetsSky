@@ -2,8 +2,8 @@ name: Update Mets Data
 
 on:
   schedule:
-    # Runs every 15 minute
-    - cron: '*/15 * * * *'
+    # Runs every 5 minute
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
