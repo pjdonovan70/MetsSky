@@ -168,6 +168,78 @@
             );
         };
 
+        // --- COMMENTS SECTION COMPONENT (NEW) ---
+        const CommentsSection = ({ postId, currentUser }) => {
+            const [comments, setComments] = useState([]);
+            const [text, setText] = useState('');
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                // Simple in-memory sort to avoid index requirement errors initially
+                const unsub = db.collection('mets_comments')
+                    .where('postId', '==', postId)
+                    .onSnapshot(snap => {
+                        const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        // Sort by date
+                        data.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+                        setComments(data);
+                        setLoading(false);
+                    });
+                return () => unsub();
+            }, [postId]);
+
+            const handlePost = async (e) => {
+                e.preventDefault();
+                if(!text.trim()) return;
+                if(!currentUser) return; // Safety
+
+                await db.collection('mets_comments').add({
+                    postId,
+                    text,
+                    authorName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'Fan'),
+                    authorId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                setText('');
+            }
+
+            return (
+                <div className="mt-4 pt-4 border-t border-white/5 bg-black/20 p-4 rounded-xl animate-fade-in">
+                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Comments ({comments.length})</h5>
+                    
+                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto custom-scrollbar">
+                        {comments.map(c => (
+                            <div key={c.id} className="bg-slate-800/50 p-3 rounded-lg border border-white/5">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-[10px] font-bold text-blue-400">{c.authorName}</span>
+                                    <span className="text-[10px] text-slate-600">
+                                        {c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-slate-200 mt-1">{c.text}</div>
+                            </div>
+                        ))}
+                        {comments.length === 0 && <div className="text-center text-slate-600 text-xs italic py-2">No comments yet.</div>}
+                    </div>
+
+                    {currentUser ? (
+                        <form onSubmit={handlePost} className="flex gap-2">
+                            <input 
+                                type="text" 
+                                placeholder="Write a comment..." 
+                                className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                value={text}
+                                onChange={e => setText(e.target.value)}
+                            />
+                            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg"><Icons.Send className="w-4 h-4"/></button>
+                        </form>
+                    ) : (
+                        <div className="text-center text-xs text-slate-500 italic">Sign in to comment.</div>
+                    )}
+                </div>
+            );
+        };
+
         // --- CHAT COMPONENT (Interactive for everyone) ---
         const ChatBox = () => {
             const [isOpen, setIsOpen] = useState(false);
@@ -291,14 +363,23 @@
                 return () => unsub();
             }, []);
 
+            // Safety check: If date is missing or invalid, don't crash
+            if (!data || !data.date) return null;
+
             const today = new Date();
             today.setHours(0,0,0,0);
             const target = new Date(data.date);
+            // Safety check: If target date is invalid
+            if (isNaN(target.getTime())) return null;
+
             const targetLocal = new Date(target.getUTCFullYear(), target.getUTCMonth(), target.getUTCDate());
             
             const diffTime = targetLocal - today;
             const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             const displayDays = daysLeft < 0 ? 0 : daysLeft;
+
+            // Safe date formatting
+            const dateString = new Date(data.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             return (
                 <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in">
@@ -310,7 +391,7 @@
                         <div>
                             <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div>
                             <h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2>
-                            <div className="text-sm text-slate-500 font-bold mt-1">{new Date(data.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                            <div className="text-sm text-slate-500 font-bold mt-1">{dateString}</div>
                         </div>
                     </div>
                     <div className="hidden md:block">
@@ -375,28 +456,38 @@
         };
 
         // --- RANT CARD (MESSAGE BOARD STYLE) ---
-        const RantCard = ({ rant, currentUser, onDelete }) => (
-            <div className="glass-panel p-5 rounded-2xl border border-white/5 relative group">
-                <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${rant.mood === 'Happy' ? 'bg-green-500' : rant.mood === 'Angry' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
-                        <span className="text-xs font-bold uppercase text-slate-500">{rant.date}</span>
+        const RantCard = ({ rant, currentUser, onDelete }) => {
+            const [showComments, setShowComments] = useState(false);
+
+            return (
+                <div className="glass-panel p-5 rounded-2xl border border-white/5 relative group">
+                    <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${rant.mood === 'Happy' ? 'bg-green-500' : rant.mood === 'Angry' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+                            <span className="text-xs font-bold uppercase text-slate-500">{rant.date}</span>
+                        </div>
+                        {/* Show delete only if current user owns the post */}
+                        {currentUser && currentUser.uid === rant.authorId && (
+                            <button onClick={() => onDelete(rant.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Icons.Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
-                    {/* Show delete only if current user owns the post */}
-                    {currentUser && currentUser.uid === rant.authorId && (
-                        <button onClick={() => onDelete(rant.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Icons.Trash2 className="w-4 h-4" />
+                    <div className="text-lg font-bold text-white mb-1">{rant.topic}</div>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-3">{rant.content}</p>
+                    <div className="border-t border-white/5 pt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {rant.authorPhoto ? <img src={rant.authorPhoto} className="w-5 h-5 rounded-full" /> : <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold">{(rant.authorName && rant.authorName[0]) || 'A'}</div>}
+                            <span className="text-[10px] font-bold text-blue-400">{rant.authorName || 'Anonymous Fan'}</span>
+                        </div>
+                        <button onClick={() => setShowComments(!showComments)} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+                            <Icons.MessageSquare className="w-3 h-3"/> {showComments ? 'Hide Comments' : 'Comments'}
                         </button>
-                    )}
+                    </div>
+                    {showComments && <CommentsSection postId={rant.id} currentUser={currentUser} />}
                 </div>
-                <div className="text-lg font-bold text-white mb-1">{rant.topic}</div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-3">{rant.content}</p>
-                <div className="border-t border-white/5 pt-2 flex items-center gap-2">
-                    {rant.authorPhoto ? <img src={rant.authorPhoto} className="w-5 h-5 rounded-full" /> : <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold">{rant.authorName ? rant.authorName[0] : 'A'}</div>}
-                    <span className="text-[10px] font-bold text-blue-400">{rant.authorName || 'Anonymous Fan'}</span>
-                </div>
-            </div>
-        );
+            );
+        };
 
         // --- BLOG BOARD (NEW) ---
         const BlogBoard = ({ posts, currentUser, onAdd, onDelete }) => {
@@ -474,6 +565,7 @@
                                     <div className="mt-6 border-t border-white/5 pt-4 text-[10px] font-bold text-slate-500 uppercase">
                                         Written by {post.authorName || 'MetsSky Contributor'}
                                     </div>
+                                    <CommentsSection postId={post.id} currentUser={currentUser} />
                                 </div>
                             </div>
                         ))}
@@ -604,7 +696,7 @@
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-black text-white flex items-center gap-2"><Icons.Play className="w-5 h-5 text-red-500"/> Video Wall (Latest)</h2>
-                            <button onClick={loadFeeds} className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl border border-white/10 font-bold transition-all flex items-center gap-2"><Icons.RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`}/> REFRESH FEEDS</button>
+                            {/* Refresh Button Removed for Automation */}
                         </div>
                         {loading ? <div className="text-slate-500 animate-pulse">Scanning user channels...</div> : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1008,7 +1100,7 @@
                                         {tab === 'blog' && <Icons.BookOpen className="w-3 h-3 md:w-4 md:h-4"/>}
                                         {tab === 'media' && <Icons.Tv className="w-3 h-3 md:w-4 md:h-4"/>}
                                         {tab === 'database' && <Icons.Database className="w-3 h-3 md:w-4 md:h-4"/>}
-                                        {tab === 'schedule' ? '2026 Season' : tab === 'moves' ? 'Transactions' : tab === 'news' ? 'Wire' : tab === 'rants' ? 'Fan Zone' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                        {tab === 'schedule' ? 'Scores' : tab === 'moves' ? 'Transactions' : tab === 'news' ? 'Wire' : tab === 'rants' ? 'Fan Zone' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
                                 ))}
                                 <div className="ml-4 flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-l border-slate-700 pl-4 whitespace-nowrap"><div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 pulse-dot' : 'bg-red-500'}`}></div>{isOnline ? "LIVE" : "OFFLINE"}</div>
@@ -1282,9 +1374,9 @@
                                                 {currentUser.photoURL ? (
                                                     <img src={currentUser.photoURL} className="w-8 h-8 rounded-full border border-white/20"/>
                                                 ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs">{currentUser.displayName ? currentUser.displayName[0] : currentUser.email[0].toUpperCase()}</div>
+                                                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs">{(currentUser.displayName && currentUser.displayName[0]) ? currentUser.displayName[0] : (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : 'U')}</div>
                                                 )}
-                                                <span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName || currentUser.email.split('@')[0]}</strong></span>
+                                                <span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName || (currentUser.email && currentUser.email.split('@')[0]) || 'User'}</strong></span>
                                             </div>
                                             <div className="flex flex-col md:flex-row gap-4">
                                                 <input type="text" placeholder="Topic (e.g. The Bullpen, The Umpire)" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required />
@@ -1302,6 +1394,7 @@
 
                                 <div className="grid gap-4">
                                     {rants.map(rant => (<RantCard key={rant.id} rant={rant} currentUser={currentUser} onDelete={deleteRant} />))}
+                                    {rants.length === 0 && <div className="text-center text-slate-500 py-12">No rants yet. Be the first!</div>}
                                 </div>
                             </div>
                         )}
