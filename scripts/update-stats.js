@@ -1,1 +1,102 @@
-ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAicm9sbGNhbGwtZTVlM2EiLAogICJwcml2YXRlX2tleV9pZCI6ICI5YmJkNTE3N2EwZjcyYTdkODhiMjRkYjFhOGQxOWQ0M2RkNTQ1NTViIiwKICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5NSUlFdkFJQkFEQU5CZ2txaGtpRzl3MEJBUUVGQUFTQ0JLWXdnZ1NpQWdFQUFvSUJBUUNMclRhY3FNdWxCVkgyXG50aVBGTk1mTVdQbzMxN2pab2Z6cU91d0ppVUVBRnNodUVmeEFrYlhaendYeW9WcUFqSzl3bVFiNVBKdjc4eU1oXG56bm8vSis0eXNjcWNzOXVDeXVISUViMGZ2eGNjSWtyMVVZVlp6VmNpMDlUMGpqUXlmWnJxSTNpOUtOR3NERTVyXG5yQnozM25LZi8vdmdISVVuTDVhWk9FZStvUDVNWCtRSEtJcURDYTYyQTkxTk9Sckw0MlNzN3BRU2owWU1SVHJ2XG5IZnpBTTRpWm5QNlk4RFAxVHhCakRCbjRNYkxWRjZlN3RUQXU0c3pIYldhcTNHZ0RyRCtpVVdTbnYrUmVleks0XG5ZZlkvSkdYdWhUSWNpcHQyVktvMlhaNkNKdnN5WUhtcFBzMnorMkpwZGhBTnVHdEtVdFl4bkt1dUQ0bHRhdTYxXG5Lc1kvSmFwakFnTUJBQUVDZ2dFQUxBZmsvTnFiSThDN0YxWlFqV1MzalR3SldOdzRxZWFPTjNwdW1RejdBQit1XG5mRUJRTUR5ZXduUW9FRlg4RlNVRVV5N3lTMVJuYWJPNlFmaDRnZnRBOUJzbTMySTFVeFJJdTR5WC9XOThSZ0tyXG5kWTBHeUFuYXE2QnljOHQyT2VwdGtOeXd2WlNtRUNIckFMZEhoSDNMelpOaEg4TnQyQzRBdi9sRmFKc1F2eHRPXG5FcDFPbmErRkgwOVIvajZRQXNPWWV0MEllTWxubEFIU3pGTTk3RzUvUXF0MERmRnBwWEhYZzJCMzJuVVNWalViXG5yajJ3MUh2NWhxTDJLRldzKy9wNXdiajFaRHFWNHprd09FN1prQU02Rm9xdElOWExhelAzRGVmaWFBamhkWEJtXG5kS1psV3dOSzZWdkI5d0t2Y2s0ZXFtMGhsMVNTVXFBRkQxeXJLbVF3YlFLQmdRREV4eUdBZWtXZ0VBVmJuQm5wXG55VXZIRVRFT0hOOFZHVmJwQTJJaG55b1AxemJHaHgzdVM4MGMwbmI1SWIwOE9LUGljVVh0VWNscm14UXREQlRpXG5XVW1tWGxIbHFoVlZMU0s3ZlllU3BtdXhqK0VKaFJYN1o3T2ZGcFF6eDg5bEh3ZCtVSWduR1BaS1JzTWtCQS92XG5paWJkRTR2UXRGSVZUYTFsRzhRdyszc0Z6d0tCZ1FDMXRxN0tnTytYTDJKcnZWNjdPZE5ZYUx5NFNpTWF2cUpnXG5KUEhDKzNZSldqd045WEIxcExURFNwaWVxc09KRFdIQzI1T2NSeDI2bFB0TGIzVnViNXovRlUrUHgyWC9EdlZnXG44QlVoem1EOEViUzhjNmhrc0tSTW1IK1JCOXZ3Vkoxanl3Qks5Q2ZTZFBVRGdvakphRnY5ZVBKa0V3d21RcDR2XG5XcXFjaVk1TExRS0JnRmdGQnN4VVpUNkN6Qks5VWE0TWw3UFUwYytSUkl4SWlHSzBXN25VVzFrNG1FelhkYUQ1XG5FU2U2VVBPQmp3Y1lBdDZ3Y21vRWNvZUtsOHpLb2JEWjVhTGdmOXV1WjlwdzFSOXV1Q3oxK2lnenhxS2VnRVd6XG5qbG8wSEZqSklORUh2eTlXVUlERW5xNTgxcDhPbmg0MCtzdGJDZWh5TUdGTkhLbWtjTzdFSHJSckFvR0FlMmRyXG4vdlJmUWNJWlNlZmFITFlobEduVXVDY0kvaEcydmlwNDBSenF4V0UxWlpsb1hVeVV3Z2UzN0JFMko2NGgxUzQvXG5hYU5XU2k4QkZmTEV3bElrUVl0Y2M5MUxwRktwUzhMZjV3eDhDdE9QZFdmcVZTOHM5U09maG9QYTFyVHdDaVNEXG50Mk5tWStPdnZVbDUwYVlBeXZ2SFNUVXlUQTF6MWQ3eC9NcmlDcVVDZ1lBYzNrZ3NjcEhWRE1GaGdYS0w5UldyXG5JeEEyR3JhYjMzUEgxTGRlZ1NXVE1uUnpFazY2RXo5bWE3b1VEZjdKVmpWNCtxaGZvSjF1Y3lTVDJQaU1FVmhnXG4xTkNYRTl4OG5ib3FZeXRNMFUyTlo1eDJzMEU2WElWbDVZS3FML00waTNNWEdRcE9LRlBPYkJ5dDBkOGprc1JoXG5VelRPbmZzbW1UcmJKVExxK0NBeU9BPT1cbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbiIsCiAgImNsaWVudF9lbWFpbCI6ICJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0Byb2xsY2FsbC1lNWUzYS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgImNsaWVudF9pZCI6ICIxMTIyNDU4NjA2NTg2NTc5Mzg5MDUiLAogICJhdXRoX3VyaSI6ICJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvYXV0aCIsCiAgInRva2VuX3VyaSI6ICJodHRwczovL29hdXRoMi5nb29nbGVhcGlzLmNvbS90b2tlbiIsCiAgImF1dGhfcHJvdmlkZXJfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9vYXV0aDIvdjEvY2VydHMiLAogICJjbGllbnRfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9yb2JvdC92MS9tZXRhZGF0YS94NTA5L2ZpcmViYXNlLWFkbWluc2RrLWZic3ZjJTQwcm9sbGNhbGwtZTVlM2EuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLAogICJ1bml2ZXJzZV9kb21haW4iOiAiZ29vZ2xlYXBpcy5jb20iCn0K
+const admin = require("firebase-admin");
+const axios = require("axios");
+
+// --- THIS IS THE NEW PART ---
+// We decode the "Magic String" (Base64) back into normal text
+const rawKey = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('ascii');
+const serviceAccount = JSON.parse(rawKey);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+// ----------------------------
+
+const db = admin.firestore();
+const METS_ID = 121;
+const YEAR = 2026; 
+
+async function updateSchedule() {
+  console.log("Fetching Schedule...");
+  // MLB API for Schedule
+  const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${METS_ID}&season=${YEAR}&hydrate=team,linescore`;
+  
+  try {
+    const res = await axios.get(url);
+    const dates = res.data.dates || [];
+    
+    const batch = db.batch();
+    
+    dates.forEach(d => {
+      const game = d.games[0];
+      const isHome = game.teams.home.team.id === METS_ID;
+      const opponent = isHome ? game.teams.away.team.name : game.teams.home.team.name;
+      
+      let result = 'Pending';
+      let scoreUs = 0;
+      let scoreThem = 0;
+      
+      if (game.status.abstractGameState === 'Final') {
+        scoreUs = isHome ? game.teams.home.score : game.teams.away.score;
+        scoreThem = isHome ? game.teams.away.score : game.teams.home.score;
+        result = scoreUs > scoreThem ? 'W' : 'L';
+      }
+
+      const docRef = db.collection('mets_schedule_2026').doc(String(game.gamePk));
+      
+      batch.set(docRef, {
+        date: d.date,
+        opponent: opponent,
+        location: isHome ? 'Home' : 'Away',
+        time: new Date(game.gameDate).toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit', timeZone: 'America/New_York' }),
+        gameType: game.gameType === 'S' ? 'Spring' : 'Regular',
+        result: result,
+        scoreUs: scoreUs,
+        scoreThem: scoreThem,
+        season: String(YEAR)
+      }, { merge: true }); 
+    });
+
+    await batch.commit();
+    console.log(`Updated ${dates.length} games.`);
+  } catch (error) {
+    console.error("Error updating schedule:", error);
+    process.exit(1);
+  }
+}
+
+async function updateRoster() {
+  console.log("Fetching Roster...");
+  const url = `https://statsapi.mlb.com/api/v1/teams/${METS_ID}/roster`;
+  
+  try {
+    const res = await axios.get(url);
+    const roster = res.data.roster || [];
+    
+    const batch = db.batch();
+
+    roster.forEach(p => {
+      const docRef = db.collection('mets_squad').doc(String(p.person.id));
+      
+      batch.set(docRef, {
+        name: p.person.fullName,
+        number: p.jerseyNumber,
+        position: p.position.name,
+        mlbId: p.person.id,
+        status: 'Active (30-Man)',
+      }, { merge: true });
+    });
+
+    await batch.commit();
+    console.log(`Updated ${roster.length} players.`);
+  } catch (error) {
+    console.error("Error updating roster:", error);
+  }
+}
+
+async function run() {
+  await updateSchedule();
+  await updateRoster();
+  process.exit(0);
+}
+
+run();
