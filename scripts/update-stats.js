@@ -1,15 +1,64 @@
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-// --- THIS IS THE NEW PART ---
-// We decode the "Magic String" (Base64) back into normal text
-const rawKey = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('ascii');
-const serviceAccount = JSON.parse(rawKey);
+console.log("--- STARTING UNIVERSAL LOADER ---");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-// ----------------------------
+const secret = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+if (!secret) {
+    console.error("❌ FATAL: The 'FIREBASE_SERVICE_ACCOUNT' secret is empty in GitHub Settings.");
+    process.exit(1);
+}
+
+console.log(`Input length: ${secret.length} characters.`);
+
+let serviceAccount;
+
+// ATTEMPT 1: Try reading it as a 'Magic String' (Base64)
+try {
+    const decoded = Buffer.from(secret, 'base64').toString('ascii');
+    // If decoding creates a valid JSON string, parse it
+    if (decoded.trim().startsWith('{')) {
+        serviceAccount = JSON.parse(decoded);
+        console.log("✅ SUCCESS: Detected and loaded 'Magic String' (Base64) key.");
+    } else {
+        throw new Error("Not Base64");
+    }
+} catch (e1) {
+    // ATTEMPT 2: Try reading it as normal JSON (Raw text)
+    try {
+        serviceAccount = JSON.parse(secret);
+        console.log("✅ SUCCESS: Detected and loaded Raw JSON key.");
+    } catch (e2) {
+        console.error("❌ ERROR: Could not read the key in ANY format.");
+        
+        // Diagnosis helper
+        const trimmed = secret.trim();
+        if (trimmed.startsWith('{')) {
+             if (!trimmed.endsWith('}')) {
+                 console.error("👉 DIAGNOSIS: It looks like Raw JSON, but the end is missing.");
+                 console.error("👉 You likely missed the final '}' curly brace when copying.");
+             } else {
+                 console.error("👉 DIAGNOSIS: The JSON syntax is broken. Check for extra quotes or missing commas.");
+             }
+        } else {
+            console.error("👉 DIAGNOSIS: The key doesn't look like JSON. Did you paste the right file?");
+        }
+        
+        process.exit(1);
+    }
+}
+
+// Initialize Firebase with the result from above
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("✅ Firebase Connection Established.");
+} catch (e) {
+    console.error("❌ FIREBASE ERROR:", e.message);
+    process.exit(1);
+}
 
 const db = admin.firestore();
 const METS_ID = 121;
@@ -17,13 +66,17 @@ const YEAR = 2026;
 
 async function updateSchedule() {
   console.log("Fetching Schedule...");
-  // MLB API for Schedule
   const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${METS_ID}&season=${YEAR}&hydrate=team,linescore`;
   
   try {
     const res = await axios.get(url);
     const dates = res.data.dates || [];
     
+    if (dates.length === 0) {
+        console.log("No games found (Offseason?).");
+        return;
+    }
+
     const batch = db.batch();
     
     dates.forEach(d => {
@@ -99,4 +152,3 @@ async function run() {
   process.exit(0);
 }
 
-run();
