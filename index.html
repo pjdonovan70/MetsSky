@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetsSky | The Dynasty</title>
+    
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#002D72">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1099/1099644.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MetsSky">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -14,7 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; background-image: radial-gradient(at 0% 0%, #002D72 0, transparent 50%), radial-gradient(at 100% 100%, #FF5910 0, transparent 50%); background-attachment: fixed; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; background-image: radial-gradient(at 0% 0%, #002D72 0, transparent 50%), radial-gradient(at 100% 100%, #FF5910 0, transparent 50%); background-attachment: fixed; overscroll-behavior-y: none; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
@@ -75,13 +84,17 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.firestore();
         const auth = firebase.auth();
+        
+        db.enablePersistence().catch(err => {
+            if (err.code == 'failed-precondition') { console.log("Persistence failed: Multiple tabs open."); } 
+            else if (err.code == 'unimplemented') { console.log("Persistence not supported by browser."); }
+        });
 
-        // --- SHARED COMPONENTS ---
+        // --- COMPONENTS ---
 
         const CommentsSection = ({ postId, currentUser }) => {
             const [comments, setComments] = useState([]); 
             const [text, setText] = useState('');
-            
             useEffect(() => { 
                 if(!postId) return; 
                 const unsubscribe = db.collection('mets_comments').where('postId', '==', postId).onSnapshot(s => { 
@@ -91,43 +104,13 @@
                 }); 
                 return () => unsubscribe(); 
             }, [postId]);
-            
             const post = async (e) => { 
                 e.preventDefault(); 
                 if(!text.trim() || !currentUser) return; 
-                await db.collection('mets_comments').add({ 
-                    postId, 
-                    text, 
-                    authorName: currentUser.displayName || 'Fan', 
-                    authorId: currentUser.uid, 
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-                }); 
+                await db.collection('mets_comments').add({ postId, text, authorName: currentUser.displayName || 'Fan', authorId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
                 setText(''); 
             };
-
-            return ( 
-                <div className="mt-4 pt-4 border-t border-white/5 bg-black/20 p-4 rounded-xl animate-fade-in"> 
-                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Comments ({comments.length})</h5> 
-                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto custom-scrollbar"> 
-                        {comments.map(c => ( 
-                            <div key={c.id} className="bg-slate-800/50 p-3 rounded-lg border border-white/5"> 
-                                <div className="flex justify-between items-start"> 
-                                    <span className="text-[10px] font-bold text-blue-400">{c.authorName}</span> 
-                                    <span className="text-[10px] text-slate-600">{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span> 
-                                </div> 
-                                <div className="text-sm text-slate-200 mt-1">{c.text}</div> 
-                            </div> 
-                        ))} 
-                        {comments.length === 0 && <div className="text-center text-slate-600 text-xs italic py-2">No comments yet.</div>} 
-                    </div> 
-                    {currentUser ? ( 
-                        <form onSubmit={post} className="flex gap-2"> 
-                            <input type="text" placeholder="Write a comment..." className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" value={text} onChange={e => setText(e.target.value)} /> 
-                            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg"><Icons.Send className="w-4 h-4"/></button> 
-                        </form> 
-                    ) : <div className="text-center text-xs text-slate-500 italic">Sign in to comment.</div>} 
-                </div> 
-            );
+            return ( <div className="mt-4 pt-4 border-t border-white/5 bg-black/20 p-4 rounded-xl animate-fade-in"> <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Comments ({comments.length})</h5> <div className="space-y-3 mb-4 max-h-60 overflow-y-auto custom-scrollbar"> {comments.map(c => ( <div key={c.id} className="bg-slate-800/50 p-3 rounded-lg border border-white/5"> <div className="flex justify-between items-start"> <span className="text-[10px] font-bold text-blue-400">{c.authorName}</span> <span className="text-[10px] text-slate-600">{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span> </div> <div className="text-sm text-slate-200 mt-1">{c.text}</div> </div> ))} {comments.length === 0 && <div className="text-center text-slate-600 text-xs italic py-2">No comments yet.</div>} </div> {currentUser ? ( <form onSubmit={post} className="flex gap-2"> <input type="text" placeholder="Write a comment..." className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" value={text} onChange={e => setText(e.target.value)} /> <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg"><Icons.Send className="w-4 h-4"/></button> </form> ) : <div className="text-center text-xs text-slate-500 italic">Sign in to comment.</div>} </div> );
         };
 
         const SquadMember = ({ member, showStatus }) => (
@@ -149,30 +132,8 @@
             </div>
         );
 
-        const PlayerCard = ({ player }) => (
-             <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-lg font-black text-white border border-white/10">
-                    {player.name ? player.name[0] : '?'}
-                </div>
-                <div>
-                    <h4 className="font-bold text-white">{player.name}</h4>
-                    <p className="text-xs text-slate-400 italic">"{player.vibe || 'Just chilling'}"</p>
-                </div>
-             </div>
-        );
-
-        const LinkCard = ({ link }) => (
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 hover:border-cyan-500/50 transition-all flex justify-between items-center group">
-                <div className="flex items-center gap-4 overflow-hidden">
-                    <div className="bg-cyan-900/30 p-3 rounded-xl text-cyan-400 group-hover:scale-110 transition-transform"><Icons.Link className="w-5 h-5"/></div>
-                    <div className="min-w-0">
-                        <div className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{link.title}</div>
-                        <div className="text-xs text-slate-500 truncate">{link.url}</div>
-                    </div>
-                </div>
-                <a href={link.url} target="_blank" className="ml-4 px-4 py-2 bg-slate-800 hover:bg-cyan-600 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">Visit</a>
-            </div>
-        );
+        const PlayerCard = ({ player }) => ( <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-4"> <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-lg font-black text-white border border-white/10"> {player.name ? player.name[0] : '?'} </div> <div> <h4 className="font-bold text-white">{player.name}</h4> <p className="text-xs text-slate-400 italic">"{player.vibe || 'Just chilling'}"</p> </div> </div> );
+        const LinkCard = ({ link }) => ( <div className="glass-panel p-4 rounded-2xl border border-white/10 hover:border-cyan-500/50 transition-all flex justify-between items-center group"> <div className="flex items-center gap-4 overflow-hidden"> <div className="bg-cyan-900/30 p-3 rounded-xl text-cyan-400 group-hover:scale-110 transition-transform"><Icons.Link className="w-5 h-5"/></div> <div className="min-w-0"> <div className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{link.title}</div> <div className="text-xs text-slate-500 truncate">{link.url}</div> </div> </div> <a href={link.url} target="_blank" className="ml-4 px-4 py-2 bg-slate-800 hover:bg-cyan-600 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">Visit</a> </div> );
 
         const RantCard = ({ rant, currentUser, onDelete }) => {
             const [showComments, setShowComments] = useState(false);
@@ -192,13 +153,11 @@
                     </div>
                     <h4 className="font-black text-white text-lg mb-2">{rant.topic}</h4>
                     <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{rant.content}</p>
-                    
                     <div className="mt-4 pt-4 border-t border-white/5">
                         <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">
                             <Icons.MessageSquare className="w-4 h-4"/> {showComments ? 'Hide Comments' : 'Reply / View Comments'}
                         </button>
                     </div>
-                    
                     {showComments && <CommentsSection postId={rant.id} currentUser={currentUser} />}
                 </div>
             );
@@ -208,7 +167,6 @@
             const isWin = game.result && (game.result.includes('W') || (game.score && parseInt(game.score.split('-')[0]) > parseInt(game.score.split('-')[1])));
             const isLoss = game.result && game.result.includes('L');
             return (
-                // CHANGED: Removed 'glass-panel' and added 'bg-slate-900/50' to prevent mobile GPU crash on long lists
                 <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all">
                     <div className="flex items-center gap-4">
                         <div className="w-12 text-center">
@@ -228,7 +186,6 @@
             );
         };
 
-        // --- AUTH GATE & CHAT ---
         const AuthGate = ({ onGoogle, onEmail, onSignUp, error }) => {
             const [email, setEmail] = useState(''); const [pass, setPass] = useState(''); const [username, setUsername] = useState(''); const [isRegister, setIsRegister] = useState(false);
             const handleSubmit = (e) => { e.preventDefault(); isRegister ? onSignUp(email, pass, username) : onEmail(email, pass); };
@@ -253,30 +210,19 @@
             return ( <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in"> <div className="flex items-center gap-6 w-full md:w-auto"> <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]"><div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div></div> <div><div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div><h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2><div className="text-sm text-slate-500 font-bold mt-1">{formatDate(data.date + 'T12:00:00')}</div></div> </div> <div className="hidden md:block"><Icons.Calendar className="w-16 h-16 text-white/5" /></div> </div> );
         };
 
-        // --- MAIN BOARDS ---
         const MediaBoard = ({ channels }) => {
              const [videos, setVideos] = useState([]);
              const [loading, setLoading] = useState(true);
-
              useEffect(() => {
                 const loadFeeds = async () => {
                     setLoading(true);
-                    const rssUrls = [
-                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5t17X9J7sXU7Q4lC7sX7g', // Mets
-                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCMK264qQk8Xh7j1wZ_8o36w'  // SNY
-                    ];
+                    const rssUrls = ['https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5t17X9J7sXU7Q4lC7sX7g', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCMK264qQk8Xh7j1wZ_8o36w'];
                     if(channels && Array.isArray(channels)) {
-                        channels.forEach(ch => {
-                            if(!ch.url) return;
-                            let match = ch.url.match(/channel\/(UC[\w-]+)/);
-                            if(match) rssUrls.push(`https://www.youtube.com/feeds/videos.xml?channel_id=${match[1]}`);
-                        });
+                        channels.forEach(ch => { if(!ch.url) return; let match = ch.url.match(/channel\/(UC[\w-]+)/); if(match) rssUrls.push(`https://www.youtube.com/feeds/videos.xml?channel_id=${match[1]}`); });
                     }
                     try {
                         const uniqueUrls = [...new Set(rssUrls)];
-                        const results = await Promise.all(
-                            uniqueUrls.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(res => res.json()).catch(() => null))
-                        );
+                        const results = await Promise.all(uniqueUrls.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(res => res.json()).catch(() => null)));
                         let allVideos = [];
                         results.forEach(feed => { if(feed && feed.status === 'ok' && feed.items) allVideos = [...allVideos, ...feed.items]; });
                         allVideos.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -285,47 +231,7 @@
                 };
                 loadFeeds();
              }, [channels]);
-
-             return ( 
-                <div className="space-y-8 animate-fade-in">
-                    <div>
-                        <h2 className="text-xl font-black text-white flex items-center gap-2 mb-4"><Icons.Play className="w-5 h-5 text-red-500"/> Video Wall (Latest)</h2>
-                        {loading ? <div className="text-slate-500 animate-pulse">Scanning user channels...</div> : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {videos.map((vid, i) => (
-                                    <a key={i} href={vid.link} target="_blank" className="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all block border border-white/10">
-                                        <div className="relative aspect-video bg-black">
-                                            <img src={vid.thumbnail} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="bg-red-600 text-white p-3 rounded-full shadow-lg scale-90 group-hover:scale-110 transition-transform"><Icons.Play className="w-6 h-6 fill-current"/></div>
-                                            </div>
-                                        </div>
-                                        <div className="p-4">
-                                            <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">{vid.author} • {formatDate(vid.pubDate)}</div>
-                                            <h3 className="text-white font-bold text-sm leading-snug line-clamp-2 group-hover:text-blue-400 transition-colors">{vid.title}</h3>
-                                        </div>
-                                    </a>
-                                ))}
-                                {videos.length === 0 && <div className="col-span-full text-center text-slate-500 italic">No videos found.</div>}
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-black text-white flex items-center gap-2 mb-4"><Icons.Tv className="w-5 h-5 text-yellow-500"/> Channel Directory</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {(channels || []).map(channel => (
-                                <div key={channel.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex justify-between items-center group">
-                                    <a href={channel.url} target="_blank" className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-                                        <div className="bg-slate-800 p-2 rounded-lg text-slate-400 flex-shrink-0"><Icons.Link className="w-4 h-4"/></div>
-                                        <span className="text-white font-bold hover:text-orange-400 transition-colors break-words text-sm md:text-base">{channel.name}</span>
-                                    </a>
-                                </div>
-                            ))}
-                             {(!channels || channels.length === 0) && <div className="text-slate-500 italic text-sm">No channels added yet.</div>}
-                        </div>
-                    </div>
-                </div> 
-            );
+             return ( <div className="space-y-8 animate-fade-in"> <div> <h2 className="text-xl font-black text-white flex items-center gap-2 mb-4"><Icons.Play className="w-5 h-5 text-red-500"/> Video Wall (Latest)</h2> {loading ? <div className="text-slate-500 animate-pulse">Scanning user channels...</div> : ( <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {videos.map((vid, i) => ( <a key={i} href={vid.link} target="_blank" className="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all block border border-white/10"> <div className="relative aspect-video bg-black"> <img src={vid.thumbnail} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /> <div className="absolute inset-0 flex items-center justify-center"> <div className="bg-red-600 text-white p-3 rounded-full shadow-lg scale-90 group-hover:scale-110 transition-transform"><Icons.Play className="w-6 h-6 fill-current"/></div> </div> </div> <div className="p-4"> <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">{vid.author} • {formatDate(vid.pubDate)}</div> <h3 className="text-white font-bold text-sm leading-snug line-clamp-2 group-hover:text-blue-400 transition-colors">{vid.title}</h3> </div> </a> ))} {videos.length === 0 && <div className="col-span-full text-center text-slate-500 italic">No videos found.</div>} </div> )} </div> <div> <h2 className="text-xl font-black text-white flex items-center gap-2 mb-4"><Icons.Tv className="w-5 h-5 text-yellow-500"/> Channel Directory</h2> <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {(channels || []).map(channel => ( <div key={channel.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex justify-between items-center group"> <a href={channel.url} target="_blank" className="flex items-center gap-3 overflow-hidden flex-1 min-w-0"> <div className="bg-slate-800 p-2 rounded-lg text-slate-400 flex-shrink-0"><Icons.Link className="w-4 h-4"/></div> <span className="text-white font-bold hover:text-orange-400 transition-colors break-words text-sm md:text-base">{channel.name}</span> </a> </div> ))} {(!channels || channels.length === 0) && <div className="text-slate-500 italic text-sm">No channels added yet.</div>} </div> </div> </div> );
         };
 
         const SocialBoard = ({ posts }) => (
@@ -357,117 +263,23 @@
         const NewsBoard = ({ news }) => { const [filterMonth, setFilterMonth] = useState('All'); const getMonthName = (d) => { if(!d) return ''; try { return new Date(d).toLocaleString('default', { month: 'long' }); } catch(e){return '';} }; const filtered = (news||[]).filter(i => { if(!i.date) return false; return filterMonth === 'All' || getMonthName(i.date) === filterMonth; }); const months = ['All', 'November', 'December', 'January', 'February', 'March', 'April']; return ( <div className="space-y-8 animate-fade-in"> <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2"> {months.map(m => ( <button key={m} onClick={() => setFilterMonth(m)} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border border-white/5 ${filterMonth === m ? 'bg-blue-600 text-white' : 'bg-slate-900/50 text-slate-400 hover:text-white hover:bg-white/10'}`}>{m}</button> ))} </div> <div className="grid gap-3"> {filtered.map(n => ( <div key={n.id} className="glass-panel p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center gap-4"> <div className="p-3 rounded-xl border border-slate-500 text-slate-400"><Icons.FileText className="w-4 h-4"/></div> <div className="min-w-0 flex-1"> <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5"> {formatDate(n.date)} • {n.source || 'News'} </div> <a href={n.url} target="_blank" className="text-white font-bold text-base md:text-lg hover:text-blue-400 transition-colors block break-words">{n.title}</a> </div> </div> ))} </div> </div> ); };
 
         const RosterBoard = ({ squad, players, rosterMode, setRosterMode }) => {
-             const getCategory = (pos) => {
-                 if(!pos) return 'Unknown';
-                 const p = pos.toLowerCase();
-                 if(p.includes('pitcher')) return 'Pitcher';
-                 if(p.includes('catcher')) return 'Catcher';
-                 if(p.includes('first') || p.includes('second') || p.includes('third') || p.includes('short') || p.includes('infield')) return 'Infield';
-                 if(p.includes('field') || p.includes('out')) return 'Outfield';
-                 if(p.includes('designated') || p.includes('dh')) return 'DH';
-                 return 'Unknown';
-             };
-
-             return (
-                <div className="space-y-8 animate-fade-in">
-                    <div className="flex justify-between items-center glass-panel p-2 rounded-2xl mb-4 w-full">
-                        <button onClick={() => setRosterMode('squad')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${rosterMode === 'squad' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><div className="flex items-center justify-center gap-2"><Icons.Users className="w-4 h-4"/> Depth Chart</div></button>
-                        <button onClick={() => setRosterMode('vibes')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${rosterMode === 'vibes' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><div className="flex items-center justify-center gap-2"><Icons.ClipboardList className="w-4 h-4"/> Vibe Check</div></button>
-                    </div>
-                    {rosterMode === 'squad' && (
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-black text-white mt-8 mb-4 pl-2 border-l-4 border-blue-500">Active 30-Man Roster</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(category => {
-                                    const posPlayers = (squad || []).filter(p => p && getCategory(p.position) === category && p.status === 'Active (30-Man)');
-                                    if (posPlayers.length === 0) return null;
-                                    return ( <div key={category} className="glass-panel rounded-3xl overflow-hidden flex flex-col max-h-[600px]"> <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{category}s</div> <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar"> {posPlayers.map(p => ( <SquadMember key={p.id || Math.random()} member={p} /> ))} </div> </div> )
-                                })}
-                            </div>
-                            <h3 className="text-xl font-black text-slate-300 mt-12 mb-4 pl-2 border-l-4 border-slate-500">40-Man Reserves / Minors</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(category => {
-                                    const posPlayers = (squad || []).filter(p => p && getCategory(p.position) === category && p.status === '40-Man / Minors');
-                                    if (posPlayers.length === 0) return null;
-                                    return ( <div key={category} className="glass-panel rounded-3xl overflow-hidden border border-slate-500/30 flex flex-col max-h-[600px]"> <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{category}s</div> <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar"> {posPlayers.map(p => ( <SquadMember key={p.id || Math.random()} member={p} showStatus={true} /> ))} </div> </div> )
-                                })}
-                            </div>
-                        </div>
-                    )}
-                    {rosterMode === 'vibes' && ( <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {(players || []).map(player => (<PlayerCard key={player.id} player={player} />))} </div> )}
-                </div>
-             );
+             const getCategory = (pos) => { if(!pos) return 'Unknown'; const p = pos.toLowerCase(); if(p.includes('pitcher')) return 'Pitcher'; if(p.includes('catcher')) return 'Catcher'; if(p.includes('first') || p.includes('second') || p.includes('third') || p.includes('short') || p.includes('infield')) return 'Infield'; if(p.includes('field') || p.includes('out')) return 'Outfield'; if(p.includes('designated') || p.includes('dh')) return 'DH'; return 'Unknown'; };
+             return ( <div className="space-y-8 animate-fade-in"> <div className="flex justify-between items-center glass-panel p-2 rounded-2xl mb-4 w-full"> <button onClick={() => setRosterMode('squad')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${rosterMode === 'squad' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><div className="flex items-center justify-center gap-2"><Icons.Users className="w-4 h-4"/> Depth Chart</div></button> <button onClick={() => setRosterMode('vibes')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${rosterMode === 'vibes' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}><div className="flex items-center justify-center gap-2"><Icons.ClipboardList className="w-4 h-4"/> Vibe Check</div></button> </div> {rosterMode === 'squad' && ( <div className="space-y-6"> <h3 className="text-xl font-black text-white mt-8 mb-4 pl-2 border-l-4 border-blue-500">Active 30-Man Roster</h3> <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(category => { const posPlayers = (squad || []).filter(p => p && getCategory(p.position) === category && p.status === 'Active (30-Man)'); if (posPlayers.length === 0) return null; return ( <div key={category} className="glass-panel rounded-3xl overflow-hidden flex flex-col max-h-[600px]"> <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{category}s</div> <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar"> {posPlayers.map(p => ( <SquadMember key={p.id || Math.random()} member={p} /> ))} </div> </div> ) })} </div> <h3 className="text-xl font-black text-slate-300 mt-12 mb-4 pl-2 border-l-4 border-slate-500">40-Man Reserves / Minors</h3> <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {['Pitcher', 'Catcher', 'Infield', 'Outfield', 'DH'].map(category => { const posPlayers = (squad || []).filter(p => p && getCategory(p.position) === category && p.status === '40-Man / Minors'); if (posPlayers.length === 0) return null; return ( <div key={category} className="glass-panel rounded-3xl overflow-hidden border border-slate-500/30 flex flex-col max-h-[600px]"> <div className="bg-slate-800/50 p-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-white/5 shrink-0">{category}s</div> <div className="divide-y divide-white/5 overflow-y-auto custom-scrollbar"> {posPlayers.map(p => ( <SquadMember key={p.id || Math.random()} member={p} showStatus={true} /> ))} </div> </div> ) })} </div> </div> )} {rosterMode === 'vibes' && ( <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {(players || []).map(player => (<PlayerCard key={player.id} player={player} />))} </div> )} </div> );
         };
 
-        // --- NEW MOVES BOARD (API CONNECTED) ---
         const MovesBoard = ({ transactions }) => {
-            const getColor = (desc) => {
-                const d = desc.toLowerCase();
-                if(d.includes('signed') || d.includes('claimed') || d.includes('recalled') || d.includes('selected')) return 'text-green-400 border-green-500/30 bg-green-500/10';
-                if(d.includes('outrighted') || d.includes('released') || d.includes('optioned') || d.includes('designated') || d.includes('lost')) return 'text-red-400 border-red-500/30 bg-red-500/10';
-                return 'text-blue-400 border-blue-500/30 bg-blue-500/10';
-            };
-
-            const getIcon = (desc) => {
-                const d = desc.toLowerCase();
-                if(d.includes('signed') || d.includes('claimed')) return <Icons.ArrowUpCircle className="w-5 h-5"/>;
-                if(d.includes('released') || d.includes('lost')) return <Icons.ArrowDownCircle className="w-5 h-5"/>;
-                return <Icons.Activity className="w-5 h-5"/>;
-            };
-
-            return (
-                <div className="space-y-6 animate-fade-in">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-green-600 p-2 rounded-lg"><Icons.RefreshCw className="w-6 h-6 text-white"/></div>
-                        <div>
-                            <h2 className="text-2xl font-black text-white">Transaction Wire</h2>
-                            <p className="text-xs text-slate-400">Official MLB Data Feed • Last 50 Moves</p>
-                        </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                        {(transactions || []).map((t, i) => (
-                            <div key={i} className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex gap-4 items-start">
-                                <div className={`p-2 rounded-xl border ${getColor(t.description)}`}>
-                                    {getIcon(t.description)}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{formatDate(t.date)}</span>
-                                        {t.player && <span className="text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded font-bold">{t.player}</span>}
-                                    </div>
-                                    <div className="text-sm text-white font-medium leading-snug">{t.description}</div>
-                                </div>
-                            </div>
-                        ))}
-                        {(!transactions || transactions.length === 0) && (
-                            <div className="text-center py-12 text-slate-500 italic">Scanning league wire...</div>
-                        )}
-                    </div>
-                </div>
-            );
+            const getColor = (desc) => { const d = desc.toLowerCase(); if(d.includes('signed') || d.includes('claimed') || d.includes('recalled') || d.includes('selected')) return 'text-green-400 border-green-500/30 bg-green-500/10'; if(d.includes('outrighted') || d.includes('released') || d.includes('optioned') || d.includes('designated') || d.includes('lost')) return 'text-red-400 border-red-500/30 bg-red-500/10'; return 'text-blue-400 border-blue-500/30 bg-blue-500/10'; };
+            const getIcon = (desc) => { const d = desc.toLowerCase(); if(d.includes('signed') || d.includes('claimed')) return <Icons.ArrowUpCircle className="w-5 h-5"/>; if(d.includes('released') || d.includes('lost')) return <Icons.ArrowDownCircle className="w-5 h-5"/>; return <Icons.Activity className="w-5 h-5"/>; };
+            return ( <div className="space-y-6 animate-fade-in"> <div className="flex items-center gap-3 mb-6"> <div className="bg-green-600 p-2 rounded-lg"><Icons.RefreshCw className="w-6 h-6 text-white"/></div> <div> <h2 className="text-2xl font-black text-white">Transaction Wire</h2> <p className="text-xs text-slate-400">Official MLB Data Feed • Last 50 Moves</p> </div> </div> <div className="space-y-3"> {(transactions || []).map((t, i) => ( <div key={i} className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex gap-4 items-start"> <div className={`p-2 rounded-xl border ${getColor(t.description)}`}> {getIcon(t.description)} </div> <div className="flex-1"> <div className="flex items-center gap-2 mb-1"> <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{formatDate(t.date)}</span> {t.player && <span className="text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded font-bold">{t.player}</span>} </div> <div className="text-sm text-white font-medium leading-snug">{t.description}</div> </div> </div> ))} {(!transactions || transactions.length === 0) && ( <div className="text-center py-12 text-slate-500 italic">Scanning league wire...</div> )} </div> </div> );
         };
 
-        const LinksBoard = ({ links }) => {
-            return (
-                <div className="space-y-8 animate-fade-in">
-                    <div className="grid gap-3">
-                        {(links || []).map(link => (<LinkCard key={link.id || Math.random()} link={link} />))}
-                        {(!links || links.length === 0) && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>}
-                    </div>
-                </div>
-            );
-        };
+        const LinksBoard = ({ links }) => { return ( <div className="space-y-8 animate-fade-in"> <div className="grid gap-3"> {(links || []).map(link => (<LinkCard key={link.id || Math.random()} link={link} />))} {(!links || links.length === 0) && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>} </div> </div> ); };
 
-        // --- APP COMPONENT ---
         function App() {
             const [activeTab, setActiveTab] = useState(() => { const hash = window.location.hash.slice(1); const validTabs = ['home', 'social', 'news', 'blog', 'media', 'schedule', 'roster', 'moves', 'rants', 'links']; return validTabs.includes(hash) ? hash : 'home'; });
             const [rosterMode, setRosterMode] = useState('squad'); const [scheduleMode, setScheduleMode] = useState('Regular'); const [currentUser, setCurrentUser] = useState(null); const [authError, setAuthError] = useState(null);
             const [schedule2026, setSchedule2026] = useState([]); const [rants, setRants] = useState([]); const [players, setPlayers] = useState([]); const [squad, setSquad] = useState([]); const [links, setLinks] = useState([]); const [channels, setChannels] = useState([]); const [news, setNews] = useState([]); const [blogPosts, setBlogPosts] = useState([]); const [socialPosts, setSocialPosts] = useState([]);
-            
-            // Replaced manual transactions with API data state
             const [apiTransactions, setApiTransactions] = useState([]);
-            
             const [isOnline, setIsOnline] = useState(false); const [loading, setLoading] = useState(true);
             const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
 
@@ -479,138 +291,47 @@
                     auth.onAuthStateChanged(user => setCurrentUser(user || null));
                     const checkOnline = () => setIsOnline(navigator.onLine); window.addEventListener('online', checkOnline); window.addEventListener('offline', checkOnline); checkOnline();
                     
-                    // Database Listeners
                     db.collection('mets_schedule_2026').orderBy('date', 'asc').onSnapshot(s => setSchedule2026(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_rants').orderBy('createdAt', 'desc').onSnapshot(s => setRants(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_roster').orderBy('createdAt', 'desc').onSnapshot(s => setPlayers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-                    db.collection('mets_squad').orderBy('name', 'asc').onSnapshot(s => {
-                        const safeSquad = s.docs.map(d => {
-                            const data = d.data();
-                            return { id: d.id, ...data, position: data.position || 'Unknown' };
-                        });
-                        setSquad(safeSquad);
-                    });
-                    
+                    db.collection('mets_squad').orderBy('name', 'asc').onSnapshot(s => { const safeSquad = s.docs.map(d => { const data = d.data(); return { id: d.id, ...data, position: data.position || 'Unknown' }; }); setSquad(safeSquad); });
                     db.collection('mets_links').orderBy('createdAt', 'desc').onSnapshot(s => setLinks(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_channels').orderBy('createdAt', 'desc').onSnapshot(s => setChannels(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_blog').orderBy('date', 'desc').onSnapshot(s => setBlogPosts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     
-                    // --- REAL MLB TRANSACTIONS API ---
                     try {
-                        const today = new Date();
-                        const endDate = today.toISOString().split('T')[0];
-                        const lastMonth = new Date();
-                        lastMonth.setMonth(lastMonth.getMonth() - 6); // Last 6 months
-                        const startDate = lastMonth.toISOString().split('T')[0];
-                        
+                        const today = new Date(); const endDate = today.toISOString().split('T')[0];
+                        const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 6); const startDate = lastMonth.toISOString().split('T')[0];
                         const res = await fetch(`https://statsapi.mlb.com/api/v1/transactions?teamId=121&startDate=${startDate}&endDate=${endDate}`);
                         const data = await res.json();
-                        if(data.transactions) {
-                            // Sort by date desc
-                            const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date));
-                            // FIX: Slice to 50 to prevent mobile crash
-                            setApiTransactions(sorted.slice(0, 50).map(t => ({
-                                date: t.date,
-                                description: t.description,
-                                player: t.person ? t.person.fullName : null,
-                                type: t.typeCode
-                            })));
-                        }
+                        if(data.transactions) { const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date)); setApiTransactions(sorted.slice(0, 50).map(t => ({ date: t.date, description: t.description, player: t.person ? t.person.fullName : null, type: t.typeCode }))); }
                     } catch(e) { console.error("MLB API Error", e); }
 
-                    // --- SOCIAL FEED FETCHER ---
                     db.collection('mets_social').orderBy('postedAt', 'desc').limit(50).onSnapshot(async (s) => {
                         const dbPosts = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                        
-                        if(dbPosts.length > 0) {
-                            setSocialPosts(dbPosts);
-                        } else {
+                        if(dbPosts.length > 0) { setSocialPosts(dbPosts); } 
+                        else {
                             try {
-                                const feeds = [
-                                    { url: 'https://rsshub.app/bluesky/search/MetsSky', type: 'hashtag' },
-                                    { url: 'https://bsky.app/profile/mets.bsky.social/rss', type: 'official' },
-                                    { url: 'https://bsky.app/profile/sny.tv/rss', type: 'official' }
-                                ];
-
-                                const requests = feeds.map(f => {
-                                    const encoded = encodeURIComponent(f.url);
-                                    return fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encoded}`)
-                                        .then(res => res.json())
-                                        .then(data => ({ status: 'ok', data, type: f.type }))
-                                        .catch(() => ({ status: 'error' }));
-                                });
-
+                                const feeds = [ { url: 'https://rsshub.app/bluesky/search/MetsSky', type: 'hashtag' }, { url: 'https://bsky.app/profile/mets.bsky.social/rss', type: 'official' }, { url: 'https://bsky.app/profile/sny.tv/rss', type: 'official' } ];
+                                const requests = feeds.map(f => { const encoded = encodeURIComponent(f.url); return fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encoded}`).then(res => res.json()).then(data => ({ status: 'ok', data, type: f.type })).catch(() => ({ status: 'error' })); });
                                 const results = await Promise.all(requests);
                                 let combinedPosts = [];
-
-                                results.forEach(res => {
-                                    if (res.status === 'ok' && res.data && res.data.items) {
-                                        const cleanPosts = res.data.items.map(i => ({
-                                            id: i.guid || Math.random().toString(),
-                                            authorName: i.author || res.data.feed.title.replace(' / Bluesky', '').replace('Bluesky search ', '#'),
-                                            authorHandle: "bluesky",
-                                            text: i.title || i.description, 
-                                            postedAt: i.pubDate,
-                                            url: i.link,
-                                            imageUrl: (i.description.match(/src="([^"]+)"/) || [])[1] || null
-                                        }));
-                                        combinedPosts = [...combinedPosts, ...cleanPosts];
-                                    }
-                                });
-
+                                results.forEach(res => { if (res.status === 'ok' && res.data && res.data.items) { const cleanPosts = res.data.items.map(i => ({ id: i.guid || Math.random().toString(), authorName: i.author || res.data.feed.title.replace(' / Bluesky', '').replace('Bluesky search ', '#'), authorHandle: "bluesky", text: i.title || i.description, postedAt: i.pubDate, url: i.link, imageUrl: (i.description.match(/src="([^"]+)"/) || [])[1] || null })); combinedPosts = [...combinedPosts, ...cleanPosts]; } });
                                 const uniquePosts = Array.from(new Map(combinedPosts.map(item => [item.text, item])).values());
                                 uniquePosts.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
-
-                                if (uniquePosts.length > 0) {
-                                    setSocialPosts(uniquePosts);
-                                } else {
-                                    setSocialPosts([{
-                                        id: 'system-msg',
-                                        authorName: "MetsSky System",
-                                        authorHandle: "system",
-                                        text: "The fetcher bots are taking a nap. Click below to view the live hashtag directly on Bluesky.",
-                                        postedAt: new Date().toISOString(),
-                                        url: "https://bsky.app/hashtag/MetsSky",
-                                        imageUrl: null
-                                    }]);
-                                }
-                            } catch(e) {
-                                console.error("Social Error", e);
-                                setSocialPosts([{
-                                    id: 'error-msg',
-                                    authorName: "System",
-                                    text: "Could not reach the cloud feed. Check your internet.",
-                                    postedAt: new Date().toISOString()
-                                }]);
-                            }
+                                if (uniquePosts.length > 0) { setSocialPosts(uniquePosts); } 
+                                else { setSocialPosts([{ id: 'system-msg', authorName: "MetsSky System", authorHandle: "system", text: "The fetcher bots are taking a nap. Click below to view the live hashtag directly on Bluesky.", postedAt: new Date().toISOString(), url: "https://bsky.app/hashtag/MetsSky", imageUrl: null }]); }
+                            } catch(e) { setSocialPosts([{ id: 'error-msg', authorName: "System", text: "Could not reach the cloud feed. Check your internet.", postedAt: new Date().toISOString() }]); }
                         }
                     });
 
-                    // News Fetcher
                     db.collection('mets_news').orderBy('date', 'desc').onSnapshot(async (s) => {
                         const manualNews = s.docs.map(d => ({ id: d.id, ...d.data(), source: 'Manual' }));
                         try {
-                            // Added timestamp to URL to force fresh fetch and avoid caching old news
-                            const rssUrls = [
-                                `https://api.rss2json.com/v1/api.json?rss_url=https://sports.yahoo.com/mlb/teams/nym/rss.xml&t=${Date.now()}`,
-                                `https://api.rss2json.com/v1/api.json?rss_url=https://www.mlb.com/mets/feeds/news/rss.xml&t=${Date.now()}`
-                            ];
+                            const rssUrls = [ `https://api.rss2json.com/v1/api.json?rss_url=https://sports.yahoo.com/mlb/teams/nym/rss.xml&t=${Date.now()}`, `https://api.rss2json.com/v1/api.json?rss_url=https://www.mlb.com/mets/feeds/news/rss.xml&t=${Date.now()}` ];
                             const responses = await Promise.all(rssUrls.map(url => fetch(url).then(res => res.json()).catch(e=>null)));
                             let liveArticles = [];
-                            responses.forEach(feed => { 
-                                if(feed && feed.status === 'ok' && feed.items) { 
-                                    liveArticles.push(...feed.items.map(i => ({ 
-                                        id: i.guid||i.link, 
-                                        title: i.title, 
-                                        url: i.link, 
-                                        // Store full pubDate for sorting, but keep display format logic in renderer
-                                        date: i.pubDate || new Date().toISOString(), 
-                                        type: 'Live Feed', 
-                                        source: feed.feed.title 
-                                    }))); 
-                                }
-                            });
-                            // Improved sorting: Ensure we use the full date object/string for comparison
+                            responses.forEach(feed => { if(feed && feed.status === 'ok' && feed.items) { liveArticles.push(...feed.items.map(i => ({ id: i.guid||i.link, title: i.title, url: i.link, date: i.pubDate || new Date().toISOString(), type: 'Live Feed', source: feed.feed.title }))); } });
                             const combined = [...manualNews, ...liveArticles].sort((a, b) => new Date(b.date) - new Date(a.date));
                             setNews(combined);
                         } catch (err) { setNews(manualNews); }
@@ -633,7 +354,6 @@
 
             return (
                 <div className="min-h-screen pb-10">
-                     {/* HEADER */}
                     <div className="glass-panel sticky top-0 z-50 border-b border-white/10 mb-8">
                         <div className="max-w-5xl mx-auto px-4 md:px-6 h-auto md:h-24 py-4 md:py-0 flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-4 group cursor-pointer self-start md:self-auto" onClick={() => setActiveTab('home')}>
@@ -651,7 +371,6 @@
                         </div>
                     </div>
 
-                    {/* CONTENT */}
                     <div className="max-w-5xl mx-auto px-6">
                         {activeTab === 'home' && (
                             <div className="animate-fade-in space-y-10">
@@ -751,6 +470,14 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('MetsSky SW Registered'))
+                    .catch(err => console.log('SW Registration Failed: ', err));
+            });
+        }
     </script>
 </body>
 </html>
