@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- --- SOCIAL MEDIA MASTER CARD --- -->
-    <!-- REPLACE THE URLS BELOW WITH YOUR ACTUAL GITHUB LINKS -->
+    <!-- REPLACE 'YOUR-GITHUB-USERNAME' and 'YOUR-REPO-NAME' BELOW -->
     <title>MetsSky | The Dynasty</title>
     <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
     
@@ -277,7 +277,7 @@
             </div>
         );
 
-        // --- UPDATED BLOG BOARD WITH LIST/DETAIL VIEW ---
+        // --- BLOG BOARD (Updated for Sharing) ---
         const BlogBoard = ({ posts, viewId, currentUser, onAdd, onDelete }) => {
             const [newPost, setNewPost] = useState({ title: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] }); 
             const [imageFile, setImageFile] = useState(null); 
@@ -285,6 +285,16 @@
             const [isFormOpen, setIsFormOpen] = useState(false);
             
             const activePost = viewId ? posts.find(p => p.id === viewId) : null;
+
+            // Dynamic Title Change
+            useEffect(() => {
+                if (activePost) {
+                    document.title = `${activePost.title} | MetsSky`;
+                } else {
+                    document.title = "MetsSky | The Dynasty";
+                }
+                return () => { document.title = "MetsSky | The Dynasty"; }
+            }, [activePost]);
 
             const handleSubmit = async (e) => { 
                 e.preventDefault(); 
@@ -308,13 +318,19 @@
                 setIsFormOpen(false); 
             };
 
+            // Smart Share Function
             const handleShare = async () => {
-                const url = window.location.href;
+                const shareData = {
+                    title: activePost.title,
+                    text: `Check out "${activePost.title}" on MetsSky!`,
+                    url: window.location.href
+                };
+
                 if (navigator.share) {
-                    try { await navigator.share({ title: activePost.title, url: url }); } catch (err) {}
+                    try { await navigator.share(shareData); } catch (err) {}
                 } else {
-                    navigator.clipboard.writeText(url);
-                    alert('Link copied to clipboard!');
+                    navigator.clipboard.writeText(`${activePost.title} - ${window.location.href}`);
+                    alert('Title and Link copied to clipboard!');
                 }
             };
 
@@ -331,7 +347,7 @@
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2"><Icons.Calendar className="w-3 h-3"/> {formatDate(activePost.date)}</div>
                                     <div className="flex gap-4">
-                                        <button onClick={handleShare} className="text-slate-400 hover:text-blue-400 transition-colors"><Icons.Link className="w-5 h-5"/></button>
+                                        <button onClick={handleShare} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"><Icons.Link className="w-4 h-4"/> Share This</button>
                                         {currentUser && currentUser.uid === activePost.authorId && (<button onClick={() => { onDelete(activePost.id); window.location.hash = 'blog'; }} className="text-slate-400 hover:text-red-500 transition-colors"><Icons.Trash2 className="w-5 h-5"/></button>)}
                                     </div>
                                 </div>
