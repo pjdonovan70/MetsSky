@@ -257,13 +257,12 @@
              useEffect(() => {
                 const loadFeeds = async () => {
                     setLoading(true);
-                    // Added New York Post Sports and The 7 Line to the video wall
+                    // UPDATED VIDEO SOURCES: Mets, SNY, NY Post, WardyNYM
                     const rssUrls = [
-                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5t17X9J7sXU7Q4lC7sX7g', // Mets (Official)
-                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCMK264qQk8Xh7j1wZ_8o36w', // SNY (Confirmed)
+                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5t17X9J7sXU7Q4lC7sX7g', // Mets
+                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCMK264qQk8Xh7j1wZ_8o36w', // SNY
                         'https://www.youtube.com/feeds/videos.xml?user=nypostsports',                   // NY Post Sports
-                        'https://www.youtube.com/feeds/videos.xml?user=The7Line',                        // The 7 Line
-                        'https://www.youtube.com/feeds/videos.xml?channel_id=UCAUSjFjJjJjJjJjJjJjJjJ'    // Metsmerized Online (Derived ID)
+                        'https://www.youtube.com/feeds/videos.xml?user=WardyNYM'                        // WardyNYM (Active Fan Channel)
                     ];
 
                     if(channels && Array.isArray(channels)) {
@@ -276,7 +275,8 @@
                     try {
                         const uniqueUrls = [...new Set(rssUrls)];
                         const results = await Promise.all(
-                            uniqueUrls.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(res => res.json()).catch(() => null))
+                            // Added timestamp (t=Date.now()) to force refresh and bypass cache
+                            uniqueUrls.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&t=${Date.now()}`).then(res => res.json()).catch(() => null))
                         );
                         let allVideos = [];
                         results.forEach(feed => { if(feed && feed.status === 'ok' && feed.items) allVideos = [...allVideos, ...feed.items]; });
