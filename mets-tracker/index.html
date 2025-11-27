@@ -498,25 +498,30 @@
                         if(data.transactions) { const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date)); setApiTransactions(sorted.slice(0, 50).map(t => ({ date: t.date, description: t.description, player: t.person ? t.person.fullName : null, type: t.typeCode }))); }
                     } catch(e) { console.error("MLB API Error", e); }
 
-                    db.collection('mets_social').orderBy('postedAt', 'desc').limit(50).onSnapshot(async (s) => {
-                        const dbPosts = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                        if(dbPosts.length > 0) { setSocialPosts(dbPosts); } 
-                        else {
-                            try {
-                                const feeds = [ { url: 'https://rsshub.app/bluesky/search/MetsSky', type: 'hashtag' }, { url: 'https://bsky.app/profile/mets.bsky.social/rss', type: 'official' }, { url: 'https://bsky.app/profile/sny.tv/rss', type: 'official' } ];
-                                const requests = feeds.map(f => { const encoded = encodeURIComponent(f.url); return fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encoded}`).then(res => res.json()).then(data => ({ status: 'ok', data, type: f.type })).catch(() => ({ status: 'error' })); });
-                                const results = await Promise.all(requests);
-                                let combinedPosts = [];
-                                results.forEach(res => { if (res.status === 'ok' && res.data && res.data.items) { const cleanPosts = res.data.items.map(i => ({ id: i.guid || Math.random().toString(), authorName: i.author || res.data.feed.title.replace(' / Bluesky', '').replace('Bluesky search ', '#'), authorHandle: "bluesky", text: i.title || i.description, postedAt: i.pubDate, url: i.link, imageUrl: (i.description.match(/src="([^"]+)"/) || [])[1] || null })); combinedPosts = [...combinedPosts, ...cleanPosts]; } });
-                                const uniquePosts = Array.from(new Map(combinedPosts.map(item => [item.text, item])).values());
-                                uniquePosts.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
-                                if (uniquePosts.length > 0) { setSocialPosts(uniquePosts); } 
-                                else { setSocialPosts([{ id: 'system-msg', authorName: "MetsSky System", authorHandle: "system", text: "The fetcher bots are taking a nap. Click below to view the live hashtag directly on Bluesky.", postedAt: new Date().toISOString(), url: "https://bsky.app/hashtag/MetsSky", imageUrl: null }]); }
-                            } catch(e) { setSocialPosts([{ id: 'error-msg', authorName: "System", text: "Could not reach the cloud feed. Check your internet.", postedAt: new Date().toISOString() }]); }
-                        }
-                    });
+                    // --- BLUESKY API FETCH (Official Endpoint) ---
+                    const fetchBluesky = async () => {
+                        try {
+                            const response = await fetch('https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=%23MetsSky%20OR%20%23LGM%20OR%20Mets&sort=latest&limit=50');
+                            const data = await response.json();
+                            if(data.posts) {
+                                const formatted = data.posts.map(post => ({
+                                    id: post.uri,
+                                    authorName: post.author.displayName || post.author.handle,
+                                    authorHandle: post.author.handle,
+                                    avatar: post.author.avatar,
+                                    text: post.record.text,
+                                    postedAt: post.record.createdAt,
+                                    imageUrl: post.embed?.images?.[0]?.fullsize || null,
+                                    url: `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`
+                                }));
+                                setSocialPosts(formatted);
+                            }
+                        } catch(e) { console.error("Bluesky Error", e); }
+                    };
+                    fetchBluesky();
+                    const interval = setInterval(fetchBluesky, 60000); // Update every minute
 
-                    // --- UPDATED NEWS FETCHER ---
+                    // --- UPDATED NEWS FETCH (Fan Blogs + MLB) ---
                     db.collection('mets_news').orderBy('date', 'desc').onSnapshot(async (s) => {
                         const manualNews = s.docs.map(d => ({ id: d.id, ...d.data(), source: 'Manual' }));
                         try {
@@ -535,6 +540,7 @@
                         } catch (err) { setNews(manualNews); }
                     });
                     setLoading(false);
+                    return () => clearInterval(interval);
                 };
                 init();
             }, []);
