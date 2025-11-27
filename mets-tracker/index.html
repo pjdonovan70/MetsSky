@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- --- SOCIAL MEDIA MASTER CARD --- -->
-    <!-- ⚠️ REPLACE 'YOUR-GITHUB-USERNAME' and 'YOUR-REPO-NAME' BELOW WITH YOUR ACTUAL INFO -->
+    <!-- REPLACE 'YOUR-GITHUB-USERNAME' and 'YOUR-REPO-NAME' BELOW -->
     <title>MetsSky | The Dynasty</title>
     <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
     
@@ -277,12 +277,13 @@
             </div>
         );
 
-        // --- BLOG BOARD (Updated for Smart Sharing) ---
-        const BlogBoard = ({ posts, viewId, currentUser, onAdd, onDelete }) => {
+        // --- BLOG BOARD (Updated for Smart Sharing & Guest Reading) ---
+        const BlogBoard = ({ posts, viewId, currentUser, onAdd, onDelete, onGoogle, onEmail, onSignUp, authError }) => {
             const [newPost, setNewPost] = useState({ title: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] }); 
             const [imageFile, setImageFile] = useState(null); 
             const [isUploading, setIsUploading] = useState(false); 
             const [isFormOpen, setIsFormOpen] = useState(false);
+            const [isLoginOpen, setIsLoginOpen] = useState(false); // New login state
             
             const activePost = viewId ? posts.find(p => p.id === viewId) : null;
 
@@ -374,7 +375,27 @@
             // LIST VIEW
             return ( 
                 <div className="space-y-8 animate-fade-in"> 
-                    <div className="flex justify-between items-center"> <h3 className="text-2xl font-black text-white italic">MetsSky <span className="text-purple-400">Blog</span></h3> {currentUser && ( <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2"> {isFormOpen ? <Icons.X className="w-4 h-4"/> : <Icons.Edit2 className="w-4 h-4"/>} {isFormOpen ? 'Close Editor' : 'Write Post'} </button> )} </div> 
+                    <div className="flex justify-between items-center"> 
+                        <h3 className="text-2xl font-black text-white italic">MetsSky <span className="text-purple-400">Blog</span></h3> 
+                        {currentUser ? ( 
+                            <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2"> 
+                                {isFormOpen ? <Icons.X className="w-4 h-4"/> : <Icons.Edit2 className="w-4 h-4"/>} {isFormOpen ? 'Close Editor' : 'Write Post'} 
+                            </button> 
+                        ) : (
+                            <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="text-slate-400 hover:text-white text-xs font-bold flex items-center gap-2 transition-colors border border-white/10 px-4 py-2 rounded-xl hover:bg-white/5">
+                                <Icons.Lock className="w-4 h-4"/> Contributor Login
+                            </button>
+                        )} 
+                    </div> 
+
+                    {/* Login Form if Guest */}
+                    {isLoginOpen && !currentUser && (
+                        <div className="mb-8">
+                            <AuthGate onGoogle={onGoogle} onEmail={onEmail} onSignUp={onSignUp} error={authError} />
+                        </div>
+                    )}
+
+                    {/* Editor Form if Logged In */}
                     {isFormOpen && currentUser && ( 
                         <div className="glass-panel p-6 rounded-3xl border border-purple-500/30 mb-8 animate-fade-in"> 
                             <h4 className="text-lg font-bold text-white mb-4">New Blog Post</h4> 
@@ -575,7 +596,23 @@
 
                         {activeTab === 'social' && <SocialBoard posts={socialPosts} />}
                         {activeTab === 'news' && <NewsBoard news={news} />}
-                        {activeTab === 'blog' && <>{currentUser ? (<BlogBoard posts={blogPosts} viewId={viewId} currentUser={currentUser} onAdd={addBlogPost} onDelete={deleteBlogPost} />) : (<AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} />)}</>}
+                        
+                        {/* --- MODIFIED: BLOG BOARD WITH LOGIN PROPS --- */}
+                        {activeTab === 'blog' && (
+                            <BlogBoard 
+                                posts={blogPosts} 
+                                viewId={viewId} 
+                                currentUser={currentUser} 
+                                onAdd={addBlogPost} 
+                                onDelete={deleteBlogPost} 
+                                onGoogle={handleGoogleLogin}
+                                onEmail={handleEmailLogin}
+                                onSignUp={handleEmailSignUp}
+                                authError={authError}
+                            />
+                        )}
+                        {/* ------------------------------------------- */}
+
                         {activeTab === 'media' && <MediaBoard channels={channels} />}
                         {activeTab === 'schedule' && (
                             <div className="space-y-8 animate-fade-in">
