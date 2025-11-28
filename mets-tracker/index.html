@@ -138,11 +138,8 @@
                         photoURL = await ref.getDownloadURL();
                     }
 
-                    // 1. Update Firebase Auth Profile
-                    // Check if method exists (prevents crash if state was corrupted previously)
-                    if (typeof currentUser.updateProfile === 'function') {
-                        await currentUser.updateProfile({ displayName: tempName, photoURL: photoURL });
-                    }
+                    // 1. Update Firebase Auth Profile (using Global Auth Instance to prevent prop crash)
+                    await auth.currentUser.updateProfile({ displayName: tempName, photoURL: photoURL });
                     
                     // 2. Update Firestore Profile
                     await db.collection('users').doc(currentUser.uid).set({
@@ -1064,14 +1061,13 @@
             }, []);
 
             const refreshUser = async () => {
+                // Safely update the current user state to reflect changes without breaking method bindings
                 if (auth.currentUser) {
                     await auth.currentUser.reload();
-                    // CRITICAL FIX: Create a new object wrapper that inherits from the real user object.
-                    // This forces React to re-render because the object reference changes,
-                    // BUT it keeps the prototype chain so methods like updateProfile still work.
-                    const user = auth.currentUser;
-                    const safeUser = Object.assign(Object.create(Object.getPrototypeOf(user)), user);
-                    setCurrentUser(safeUser);
+                    // We simply set currentUser to a shallow copy for React to detect change,
+                    // BUT we must ensure we don't depend on methods on this state object if we do this.
+                    // The App uses global 'auth' for updates, so this state is just for display.
+                    setCurrentUser({...auth.currentUser}); 
                 }
             };
 
