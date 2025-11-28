@@ -120,7 +120,6 @@
                 e.preventDefault();
                 setIsSaving(true);
                 try {
-                    // Upload Image if selected
                     let photoURL = currentUser.photoURL;
                     if(imageFile) {
                         const ref = storage.ref(`users/${currentUser.uid}/${Date.now()}_avatar`);
@@ -128,10 +127,10 @@
                         photoURL = await ref.getDownloadURL();
                     }
 
-                    // Update Auth Profile
+                    // 1. Update Firebase Auth Profile
                     await currentUser.updateProfile({ displayName: tempName, photoURL: photoURL });
                     
-                    // Update Firestore Profile (for Bio)
+                    // 2. Update Firestore Profile
                     await db.collection('users').doc(currentUser.uid).set({
                         displayName: tempName,
                         photoURL: photoURL,
@@ -139,6 +138,11 @@
                         email: currentUser.email,
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
+
+                    // 3. FORCE REFRESH of App State
+                    if (onUpdateProfile) {
+                        await onUpdateProfile();
+                    }
 
                     setIsEditing(false);
                     setImageFile(null);
@@ -1059,6 +1063,13 @@
                 init();
             }, []);
 
+            const refreshUser = async () => {
+                if (auth.currentUser) {
+                    await auth.currentUser.reload();
+                    setCurrentUser({...auth.currentUser});
+                }
+            };
+
             const handleGoogleLogin = async () => { setAuthError(null); try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (error) { setAuthError(error.message); } };
             const handleEmailLogin = async (email, password) => { setAuthError(null); try { await auth.signInWithEmailAndPassword(email, password); } catch(error) { setAuthError(error.message); } };
             const handleEmailSignUp = async (email, password, username) => { setAuthError(null); try { const u = await auth.createUserWithEmailAndPassword(email, password); if(username) await u.user.updateProfile({displayName: username}); setCurrentUser({...u.user}); } catch(error) { setAuthError(error.message); } };
@@ -1195,7 +1206,7 @@
 
                         {activeTab === 'profile' && (
                             currentUser ? (
-                                <ProfileBoard currentUser={currentUser} userProfile={userProfile} onLogout={handleLogout} />
+                                <ProfileBoard currentUser={currentUser} userProfile={userProfile} onUpdateProfile={refreshUser} onLogout={handleLogout} />
                             ) : (
                                 <div className="text-center">
                                     <AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} />
