@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- --- SOCIAL MEDIA MASTER CARD --- -->
     <title>MetsSky | The Dynasty</title>
-    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
+    <meta name="description" content="The ultimate hub for NY Mets fans.">
     
-    <!-- PWA & Icon Settings -->
     <meta name="theme-color" content="#002D72">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -100,6 +98,19 @@
             else if (err.code == 'unimplemented') { console.log("Persistence not supported by browser."); }
         });
 
+        // --- GLOBAL AVATAR COMPONENT ---
+        const Avatar = ({ src, name, className }) => {
+            const [error, setError] = useState(false);
+            if (src && !error) {
+                return <img src={src} className={className} onError={() => setError(true)} alt={name} />;
+            }
+            return (
+                <div className={`${className} bg-slate-700 flex items-center justify-center text-white font-bold border border-white/10 uppercase`}>
+                    {name ? name[0] : '?'}
+                </div>
+            );
+        };
+
         // --- COMPONENTS ---
 
         const ProfileBoard = ({ currentUser, userProfile, onUpdateProfile, onLogout }) => {
@@ -139,9 +150,9 @@
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // 3. FORCE REFRESH of App State
+                    // 3. FORCE REFRESH of App State by passing back the new URL immediately
                     if (onUpdateProfile) {
-                        await onUpdateProfile();
+                        onUpdateProfile(photoURL);
                     }
 
                     setIsEditing(false);
@@ -160,11 +171,8 @@
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-orange-600 to-blue-600 opacity-20"></div>
                         
                         <div className="relative z-10 flex flex-col items-center">
-                            <div className="w-32 h-32 rounded-full border-4 border-slate-900 shadow-2xl overflow-hidden bg-slate-800 flex items-center justify-center mb-4 group relative">
-                                {currentUser.photoURL ? 
-                                    <img src={currentUser.photoURL} className="w-full h-full object-cover" /> : 
-                                    <span className="text-4xl font-bold text-slate-500">{currentUser.displayName ? currentUser.displayName[0] : 'U'}</span>
-                                }
+                            <div className="w-32 h-32 rounded-full border-4 border-slate-900 shadow-2xl overflow-hidden mb-4 group relative">
+                                <Avatar src={currentUser.photoURL} name={currentUser.displayName || 'U'} className="w-full h-full object-cover" />
                             </div>
                             
                             {!isEditing ? (
@@ -245,13 +253,7 @@
                         {comments.map(c => ( 
                             <div key={c.id} className="bg-slate-800/50 p-3 rounded-lg border border-white/5 flex gap-3"> 
                                 <div className="shrink-0">
-                                    {c.authorPhoto ? (
-                                        <img src={c.authorPhoto} className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white border border-white/10">
-                                            {c.authorName ? c.authorName[0] : '?'}
-                                        </div>
-                                    )}
+                                    <Avatar src={c.authorPhoto} name={c.authorName} className="w-8 h-8 rounded-full object-cover border border-white/10" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start"> 
@@ -308,7 +310,7 @@
                 <div className="glass-panel p-6 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all relative group">
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
-                            {rant.authorPhoto ? <img src={rant.authorPhoto} className="w-10 h-10 rounded-full border border-white/10 object-cover"/> : <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">{rant.authorName ? rant.authorName[0] : 'U'}</div>}
+                            <Avatar src={rant.authorPhoto} name={rant.authorName} className="w-10 h-10 rounded-full border border-white/10 object-cover" />
                             <div>
                                 <div className="font-bold text-white text-sm">{rant.authorName}</div>
                                 <div className="text-[10px] text-slate-500 uppercase tracking-widest">{rant.mood} • {rant.createdAt ? new Date(rant.createdAt.seconds * 1000).toLocaleDateString() : 'Just Now'}</div>
@@ -410,13 +412,7 @@
                                 {messages.map(msg => ( 
                                     <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === username ? 'flex-row-reverse' : 'flex-row'}`}> 
                                         {/* Chat Avatar */}
-                                        {msg.photoURL ? (
-                                            <img src={msg.photoURL} className="w-6 h-6 rounded-full object-cover border border-white/10" />
-                                        ) : (
-                                            <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[8px] font-bold text-white border border-white/10">
-                                                {msg.sender[0]}
-                                            </div>
-                                        )}
+                                        <Avatar src={msg.photoURL} name={msg.sender} className="w-6 h-6 rounded-full object-cover border border-white/10 shrink-0" />
                                         
                                         <div className={`flex flex-col ${msg.sender === username ? 'items-end' : 'items-start'} max-w-[80%]`}> 
                                             <div className="text-[10px] text-slate-500 mb-1 px-1 font-bold">{msg.sender}</div> 
@@ -668,7 +664,7 @@
                                 <h1 className="text-3xl md:text-5xl font-black text-white mb-8 leading-tight">{activePost.title || 'Untitled'}</h1>
                                 <div className="text-slate-300 leading-relaxed whitespace-pre-wrap font-serif text-lg md:text-xl">{activePost.content || ''}</div>
                                 <div className="mt-10 border-t border-white/5 pt-6 text-xs font-bold text-slate-500 uppercase flex items-center gap-3">
-                                    {activePost.authorPhoto ? <img src={activePost.authorPhoto} className="w-10 h-10 rounded-full object-cover border border-white/10"/> : <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white">{activePost.authorName ? activePost.authorName[0] : 'U'}</div>}
+                                    <Avatar src={activePost.authorPhoto} name={activePost.authorName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                                     <span>Written by {activePost.authorName || 'Contributor'}</span>
                                 </div>
                                 <CommentsSection postId={activePost.id} currentUser={currentUser} />
@@ -721,7 +717,7 @@
                                     <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-2"> 
                                         {formatDate(post.date)} • 
                                         <div className="flex items-center gap-1">
-                                            {post.authorPhoto && <img src={post.authorPhoto} className="w-4 h-4 rounded-full object-cover"/>}
+                                            <Avatar src={post.authorPhoto} name={post.authorName} className="w-4 h-4 rounded-full object-cover" />
                                             {post.authorName || 'Staff'}
                                         </div>
                                     </div> 
@@ -1063,10 +1059,10 @@
                 init();
             }, []);
 
-            const refreshUser = async () => {
-                if (auth.currentUser) {
-                    await auth.currentUser.reload();
-                    setCurrentUser({...auth.currentUser});
+            const refreshUser = (newPhotoURL) => {
+                if (currentUser) {
+                    // Update local state immediately without waiting for auth reload
+                    setCurrentUser(prev => ({...prev, photoURL: newPhotoURL}));
                 }
             };
 
@@ -1101,7 +1097,7 @@
                                 {currentUser && (
                                     <button onClick={() => window.location.hash = 'profile'} className="flex items-center gap-2 bg-slate-800 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-full transition-all group self-start">
                                         <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
-                                            {currentUser.photoURL ? <img src={currentUser.photoURL} className="w-full h-full object-cover"/> : (currentUser.displayName ? currentUser.displayName[0] : 'U')}
+                                            <Avatar src={currentUser.photoURL} name={currentUser.displayName || 'U'} className="w-full h-full object-cover" />
                                         </div>
                                         <div className="text-left">
                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-0.5">My Account</div>
