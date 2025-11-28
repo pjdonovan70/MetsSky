@@ -139,7 +139,10 @@
                     }
 
                     // 1. Update Firebase Auth Profile
-                    await currentUser.updateProfile({ displayName: tempName, photoURL: photoURL });
+                    // Check if method exists (prevents crash if state was corrupted previously)
+                    if (typeof currentUser.updateProfile === 'function') {
+                        await currentUser.updateProfile({ displayName: tempName, photoURL: photoURL });
+                    }
                     
                     // 2. Update Firestore Profile
                     await db.collection('users').doc(currentUser.uid).set({
@@ -150,14 +153,15 @@
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // 3. FORCE REFRESH of App State by passing back the new URL immediately
+                    // 3. FORCE REFRESH of App State
                     if (onUpdateProfile) {
-                        onUpdateProfile(photoURL);
+                        await onUpdateProfile();
                     }
 
                     setIsEditing(false);
                     setImageFile(null);
                 } catch(err) {
+                    console.error(err);
                     alert("Error saving profile: " + err.message);
                 }
                 setIsSaving(false);
@@ -1059,10 +1063,15 @@
                 init();
             }, []);
 
-            const refreshUser = (newPhotoURL) => {
-                if (currentUser) {
-                    // Update local state immediately without waiting for auth reload
-                    setCurrentUser(prev => ({...prev, photoURL: newPhotoURL}));
+            const refreshUser = async () => {
+                if (auth.currentUser) {
+                    await auth.currentUser.reload();
+                    // CRITICAL FIX: Create a new object wrapper that inherits from the real user object.
+                    // This forces React to re-render because the object reference changes,
+                    // BUT it keeps the prototype chain so methods like updateProfile still work.
+                    const user = auth.currentUser;
+                    const safeUser = Object.assign(Object.create(Object.getPrototypeOf(user)), user);
+                    setCurrentUser(safeUser);
                 }
             };
 
