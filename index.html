@@ -1,3 +1,8 @@
+Here is the full, updated code.
+
+I have applied the **Error Handling** fixes to the Blog section so that `addBlogPost` now waits for the database to confirm the save. If it fails (e.g., due to internet issues or rule conflicts), it will now alert the user with the specific error message instead of silently failing.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,8 +121,12 @@
             const post = async (e) => { 
                 e.preventDefault(); 
                 if(!text.trim() || !currentUser) return; 
-                await db.collection('mets_comments').add({ postId, text, authorName: currentUser.displayName || 'Fan', authorId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
-                setText(''); 
+                try {
+                    await db.collection('mets_comments').add({ postId, text, authorName: currentUser.displayName || 'Fan', authorId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
+                    setText(''); 
+                } catch(e) {
+                    alert("Comment failed: " + e.message);
+                }
             };
             return ( <div className="mt-4 pt-4 border-t border-white/5 bg-black/20 p-4 rounded-xl animate-fade-in"> <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Comments ({comments.length})</h5> <div className="space-y-3 mb-4 max-h-60 overflow-y-auto custom-scrollbar"> {comments.map(c => ( <div key={c.id} className="bg-slate-800/50 p-3 rounded-lg border border-white/5"> <div className="flex justify-between items-start"> <span className="text-[10px] font-bold text-blue-400">{c.authorName}</span> <span className="text-[10px] text-slate-600">{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span> </div> <div className="text-sm text-slate-200 mt-1">{c.text}</div> </div> ))} {comments.length === 0 && <div className="text-center text-slate-600 text-xs italic py-2">No comments yet.</div>} </div> {currentUser ? ( <form onSubmit={post} className="flex gap-2"> <input type="text" placeholder="Write a comment..." className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" value={text} onChange={e => setText(e.target.value)} /> <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg"><Icons.Send className="w-4 h-4"/></button> </form> ) : <div className="text-center text-xs text-slate-500 italic">Sign in to comment.</div>} </div> );
         };
@@ -246,11 +255,13 @@
 
             const handleSave = async () => {
                 if(!tempName || !tempUrl) return;
-                await db.collection('mets_settings').doc('random_met').set({
-                    name: tempName,
-                    url: tempUrl
-                });
-                setIsEditing(false);
+                try {
+                    await db.collection('mets_settings').doc('random_met').set({
+                        name: tempName,
+                        url: tempUrl
+                    });
+                    setIsEditing(false);
+                } catch(e) { alert(e.message); }
             };
 
             const enableEdit = () => {
@@ -399,23 +410,27 @@
             const handleSubmit = async (e) => { 
                 e.preventDefault(); 
                 setIsUploading(true);
-                let finalImageUrl = newPost.imageUrl;
-                if (imageFile) {
-                    try {
+                
+                try {
+                    let finalImageUrl = newPost.imageUrl;
+                    if (imageFile) {
                         const storageRef = storage.ref(`blog_images/${Date.now()}_${imageFile.name}`);
                         await storageRef.put(imageFile);
                         finalImageUrl = await storageRef.getDownloadURL();
-                    } catch (error) {
-                        alert("Error uploading image: " + error.message);
-                        setIsUploading(false);
-                        return;
                     }
+
+                    // Await the write to see if it fails
+                    await onAdd({ ...newPost, imageUrl: finalImageUrl });
+                    
+                    // Only clear if successful
+                    setNewPost({ title: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] }); 
+                    setImageFile(null);
+                    setIsFormOpen(false); 
+                } catch (error) {
+                    alert("Error posting blog: " + error.message + "\n\n(Check your permissions!)");
+                } finally {
+                    setIsUploading(false);
                 }
-                onAdd({ ...newPost, imageUrl: finalImageUrl });
-                setNewPost({ title: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] }); 
-                setImageFile(null);
-                setIsUploading(false);
-                setIsFormOpen(false); 
             };
 
             const handleShare = async () => {
@@ -821,20 +836,31 @@
             const handleEmailLogin = async (email, password) => { setAuthError(null); try { await auth.signInWithEmailAndPassword(email, password); } catch(error) { setAuthError(error.message); } };
             const handleEmailSignUp = async (email, password, username) => { setAuthError(null); try { const u = await auth.createUserWithEmailAndPassword(email, password); if(username) await u.user.updateProfile({displayName: username}); setCurrentUser({...u.user}); } catch(error) { setAuthError(error.message); } };
             const handleLogout = () => auth.signOut();
-            const addRant = async (e) => { e.preventDefault(); if (!currentUser) return; await db.collection('mets_rants').add({ ...newRant, date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp(), authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], authorPhoto: currentUser.photoURL }); setNewRant({ topic: '', content: '', mood: 'Neutral' }); };
-            const deleteRant = (id) => db.collection('mets_rants').doc(id).delete();
-            const addBlogPost = async (data) => { if (!currentUser) return; await db.collection('mets_blog').add({ ...data, authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteBlogPost = (id) => { if(confirm("Delete?")) db.collection('mets_blog').doc(id).delete(); };
-            const addChannel = async (channel) => { if (!currentUser) return; await db.collection('mets_channels').add({ ...channel, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteChannel = async (id) => { if (!currentUser) return; if(confirm("Delete this link?")) db.collection('mets_channels').doc(id).delete(); };
+            const addRant = async (e) => { e.preventDefault(); if (!currentUser) return; try{ await db.collection('mets_rants').add({ ...newRant, date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp(), authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], authorPhoto: currentUser.photoURL }); setNewRant({ topic: '', content: '', mood: 'Neutral' }); }catch(e){alert("Error: "+e.message);} };
+            const deleteRant = (id) => { if(confirm("Delete this rant?")) db.collection('mets_rants').doc(id).delete().catch(e=>alert(e.message)); };
+            
+            // --- UPDATED ADD BLOG FUNCTION WITH ERROR HANDLING ---
+            const addBlogPost = async (data) => { 
+                if (!currentUser) throw new Error("You must be logged in to post.");
+                return await db.collection('mets_blog').add({ 
+                    ...data, 
+                    authorId: currentUser.uid, 
+                    authorName: currentUser.displayName || currentUser.email.split('@')[0], 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                }); 
+            };
+            
+            const deleteBlogPost = (id) => { if(confirm("Delete?")) db.collection('mets_blog').doc(id).delete().catch(e=>alert("Delete failed: "+e.message)); };
+            const addChannel = async (channel) => { if (!currentUser) return; try{await db.collection('mets_channels').add({ ...channel, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
+            const deleteChannel = async (id) => { if (!currentUser) return; if(confirm("Delete this link?")) db.collection('mets_channels').doc(id).delete().catch(e=>alert(e.message)); };
             
             // New Vibe Handlers
-            const addVibe = async (vibe) => { if (!currentUser) return; await db.collection('mets_roster').add({ ...vibe, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete(); };
+            const addVibe = async (vibe) => { if (!currentUser) return; try{await db.collection('mets_roster').add({ ...vibe, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
+            const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete().catch(e=>alert(e.message)); };
 
             // Random Series Handlers
-            const addRandomMet = async (item) => { if (!currentUser) return; await db.collection('mets_random_series').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
-            const deleteRandomMet = async (id) => { if (!currentUser) return; if(confirm("Delete this entry?")) db.collection('mets_random_series').doc(id).delete(); };
+            const addRandomMet = async (item) => { if (!currentUser) return; try{await db.collection('mets_random_series').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
+            const deleteRandomMet = async (id) => { if (!currentUser) return; if(confirm("Delete this entry?")) db.collection('mets_random_series').doc(id).delete().catch(e=>alert(e.message)); };
 
             if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black text-2xl bg-slate-900">LOADING CITI FIELD...</div>;
 
