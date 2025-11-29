@@ -445,10 +445,14 @@
                 }
             };
 
-            // --- UPDATED BLUESKY POSTING METHOD FOR MOBILE COMPATIBILITY ---
+            // --- MOBILE FIX: DETECT DEVICE AND SWITCH URL SCHEME ---
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const author = activePost ? (activePost.authorName || 'Contributor') : '';
-            const text = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}` : '';
-            const bskyUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
+            const textContent = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}` : '';
+            
+            // On mobile, use the APP SCHEME (bluesky://). On desktop, use the WEBSITE (https://bsky.app)
+            const baseUrl = isMobile ? 'bluesky://' : 'https://bsky.app/';
+            const bskyUrl = `${baseUrl}intent/compose?text=${encodeURIComponent(textContent)}`;
 
             if (viewId) {
                 if (!activePost) return <div className="text-center text-slate-500 py-20 animate-pulse">Loading Post or Post Not Found...</div>;
@@ -463,8 +467,8 @@
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2"><Icons.Calendar className="w-3 h-3"/> {formatDate(activePost.date)}</div>
                                     <div className="flex gap-2">
-                                        {/* BLUESKY BUTTON IS NOW A DIRECT LINK FOR MOBILE COMPATIBILITY */}
-                                        <a href={bskyUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-sky-500/20">
+                                        {/* DYNAMIC LINK THAT ADAPTS TO MOBILE VS DESKTOP */}
+                                        <a href={bskyUrl} target={isMobile ? undefined : "_blank"} rel="noopener noreferrer" className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-sky-500/20">
                                             <Icons.Bluesky className="w-4 h-4"/> Post to Bluesky
                                         </a>
                                         <button onClick={handleShare} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
@@ -1070,4 +1074,3 @@
     </script>
 </body>
 </html>
-
