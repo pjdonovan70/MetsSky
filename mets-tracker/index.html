@@ -1,3 +1,10 @@
+This is a common issue with mobile apps (especially on iOS). When you use JavaScript (like `window.open`) to open a link, mobile operating systems often treat it as a "popup" and disconnect the data (the text) from the app opening.
+
+The fix is to change the **Button** into a standard **Link (`<a>` tag)**. Mobile phones trust standard links much more than buttons for opening apps like Bluesky, Twitter, or Instagram.
+
+Here is the updated code. I have modified the **BlogBoard** section to use a "Link" instead of a "Button" for the Bluesky action.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -445,12 +452,10 @@
                 }
             };
 
-            const handleBlueskyPost = () => {
-                const author = activePost.authorName || 'Contributor';
-                const text = `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}`;
-                const url = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
-                window.open(url, '_blank');
-            };
+            // --- UPDATED BLUESKY POSTING METHOD FOR MOBILE COMPATIBILITY ---
+            const author = activePost ? (activePost.authorName || 'Contributor') : '';
+            const text = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}` : '';
+            const bskyUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
 
             if (viewId) {
                 if (!activePost) return <div className="text-center text-slate-500 py-20 animate-pulse">Loading Post or Post Not Found...</div>;
@@ -465,9 +470,10 @@
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2"><Icons.Calendar className="w-3 h-3"/> {formatDate(activePost.date)}</div>
                                     <div className="flex gap-2">
-                                        <button onClick={handleBlueskyPost} className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-sky-500/20">
+                                        {/* BLUESKY BUTTON IS NOW A DIRECT LINK FOR MOBILE COMPATIBILITY */}
+                                        <a href={bskyUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-sky-500/20">
                                             <Icons.Bluesky className="w-4 h-4"/> Post to Bluesky
-                                        </button>
+                                        </a>
                                         <button onClick={handleShare} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
                                             <Icons.Link className="w-4 h-4"/> Copy
                                         </button>
