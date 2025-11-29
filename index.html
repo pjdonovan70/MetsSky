@@ -824,7 +824,8 @@
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://metsmerizedonline.com/feed/&t=${Date.now()}`, 
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://risingapple.com/feed/&t=${Date.now()}`,
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://www.amazinavenue.com/rss/current&t=${Date.now()}`, 
-                                `https://api.rss2json.com/v1/api.json?rss_url=https://nypost.com/sports/mets/feed/&t=${Date.now()}` 
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://nypost.com/sports/mets/feed/&t=${Date.now()}`,
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://almostametnewsletter.substack.com/feed&t=${Date.now()}`
                             ];
                             const responses = await Promise.all(rssUrls.map(url => fetch(url).then(res => res.json()).catch(e=>null)));
                             let liveArticles = [];
