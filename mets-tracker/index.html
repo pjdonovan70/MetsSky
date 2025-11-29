@@ -126,18 +126,21 @@
             );
         };
 
-        // Missing Component Definitions (Mocked/Basic implementations to prevent errors)
+        // --- DEFINITIONS TO PREVENT CRASHES ---
+        // These components are referenced in App but were missing from the provided code.
+        // We define them here to ensure the screen is not blank.
+
         const CountdownTicket = () => <div className="hidden"></div>;
-        const NewsBoard = ({news}) => <div className="text-white text-center">News Feed</div>;
-        const MediaBoard = () => <div className="text-white text-center">Media</div>;
-        const ScheduleCard = ({game}) => <div className="text-white p-4 border border-white/10">{game.date}</div>;
-        const RosterBoard = () => <div className="text-white text-center">Roster</div>;
-        const MovesBoard = () => <div className="text-white text-center">Moves</div>;
-        const LinksBoard = () => <div className="text-white text-center">Links</div>;
-        const RandomSeriesBoard = () => <div className="text-white text-center">Random Series</div>;
+        const NewsBoard = ({news}) => <div className="text-white text-center p-10 glass-panel rounded-3xl">News Feed Loading...</div>;
+        const MediaBoard = () => <div className="text-white text-center p-10 glass-panel rounded-3xl">Media Center</div>;
+        const ScheduleCard = ({game}) => <div className="text-white p-4 border border-white/10 bg-white/5 rounded-xl mb-2 flex justify-between"><span>{game.date}</span><span>{game.opponent}</span></div>;
+        const RosterBoard = () => <div className="text-white text-center p-10 glass-panel rounded-3xl">Active Roster</div>;
+        const MovesBoard = () => <div className="text-white text-center p-10 glass-panel rounded-3xl">Recent Transactions</div>;
+        const LinksBoard = () => <div className="text-white text-center p-10 glass-panel rounded-3xl">Links & Receipts</div>;
+        const RandomSeriesBoard = () => <div className="text-white text-center p-10 glass-panel rounded-3xl">Random Met Series</div>;
         const HomeFloatingButton = () => null;
-        const AuthGate = () => <div className="text-white text-center">Login Required</div>;
-        const RandomMetRibbon = () => null; 
+        const AuthGate = () => <div className="text-white text-center p-4">Please Log In</div>;
+        const RandomMetRibbon = () => null;
 
         // --- FEATURED VIDEO COMPONENT (2025 Mets Theme Song) ---
         const FeaturedVideo = () => (
@@ -1013,8 +1016,28 @@
             );
         }
 
+        // --- ERROR BOUNDARY ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("Uncaught error:", error, errorInfo); }
+            render() { 
+                if (this.state.hasError) { 
+                    return (
+                        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-10 text-center">
+                            <h1 className="text-4xl font-black text-red-500 mb-4">System Malfunction</h1>
+                            <p className="text-white text-lg mb-8">The app crashed. Here is the error:</p>
+                            <pre className="bg-black/50 p-4 rounded text-red-300 text-xs overflow-auto max-w-full">{this.state.error.toString()}</pre>
+                            <button onClick={() => window.location.reload()} className="mt-8 bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">Reload Dugout</button>
+                        </div>
+                    ); 
+                } 
+                return this.props.children; 
+            }
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
