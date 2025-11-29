@@ -448,7 +448,8 @@
             // --- MOBILE FIX: DETECT DEVICE AND SWITCH URL SCHEME ---
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const author = activePost ? (activePost.authorName || 'Contributor') : '';
-            const textContent = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}` : '';
+            // ADDED #MetsSky TAG HERE
+            const textContent = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}\n\n#MetsSky` : '';
             
             // On mobile, use the APP SCHEME (bluesky://). On desktop, use the WEBSITE (https://bsky.app)
             const baseUrl = isMobile ? 'bluesky://' : 'https://bsky.app/';
