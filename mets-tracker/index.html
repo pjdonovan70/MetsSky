@@ -246,6 +246,7 @@
             return ( <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in"> <div className="flex items-center gap-6 w-full md:w-auto"> <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]"><div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div></div> <div><div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div><h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2><div className="text-sm text-slate-500 font-bold mt-1">{formatDate(data.date + 'T12:00:00')}</div></div> </div> <div className="hidden md:block"><Icons.Calendar className="w-16 h-16 text-white/5" /></div> </div> );
         };
 
+        // --- UPDATED (View Only) RandomMetRibbon ---
         const RandomMetRibbon = () => {
             const [data, setData] = useState({ name: 'Loading...', url: '' });
 
@@ -282,6 +283,7 @@
             );
         };
 
+        // --- UPDATED (View Only) MediaBoard ---
         const MediaBoard = ({ channels }) => {
             return (
                 <div className="space-y-8 animate-fade-in">
@@ -590,6 +592,7 @@
 
         const LinksBoard = ({ links }) => { return ( <div className="space-y-8 animate-fade-in"> <div className="grid gap-3"> {(links || []).map(link => (<LinkCard key={link.id || Math.random()} link={link} />))} {(!links || links.length === 0) && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>} </div> </div> ); };
 
+        // --- UPDATED (View Only) RandomSeriesBoard ---
         const RandomSeriesBoard = ({ entries }) => {
             return (
                 <div className="space-y-8 animate-fade-in">
@@ -660,6 +663,11 @@
             const [route, setRoute] = useState(getRoute());
             const activeTab = route.tab;
             const viewId = route.id;
+            
+            // --- SCROLL FIX: Force scroll to top on tab change ---
+            useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [activeTab, viewId]);
 
             const [rosterMode, setRosterMode] = useState('40man'); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
@@ -767,16 +775,11 @@
             };
             
             const deleteBlogPost = (id) => { if(confirm("Delete?")) db.collection('mets_blog').doc(id).delete().catch(e=>alert("Delete failed: "+e.message)); };
-            const addChannel = async (channel) => { if (!currentUser) return; try{await db.collection('mets_channels').add({ ...channel, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
-            const deleteChannel = async (id) => { if (!currentUser) return; if(confirm("Delete this link?")) db.collection('mets_channels').doc(id).delete().catch(e=>alert(e.message)); };
+            // Media/Random Add/Delete functions removed as they are now view-only
             
             // New Vibe Handlers
             const addVibe = async (vibe) => { if (!currentUser) return; try{await db.collection('mets_roster').add({ ...vibe, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
             const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete().catch(e=>alert(e.message)); };
-
-            // Random Series Handlers
-            const addRandomMet = async (item) => { if (!currentUser) return; try{await db.collection('mets_random_series').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
-            const deleteRandomMet = async (id) => { if (!currentUser) return; if(confirm("Delete this entry?")) db.collection('mets_random_series').doc(id).delete().catch(e=>alert(e.message)); };
 
             if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black text-2xl bg-slate-900">LOADING CITI FIELD...</div>;
 
@@ -854,10 +857,6 @@
                                     <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
                                         <iframe 
                                             className="absolute top-0 left-0 w-full h-full"
-                                            /* 
-                                             * IMPORTANT: Replace 'PASTE_ID_HERE' below with your actual Video ID.
-                                             * Example: If link is youtube.com/watch?v=AbCdEfGh, put 'AbCdEfGh'
-                                             */
                                             src="https://www.youtube.com/embed/6y7sf-y-Maw" 
                                             title="2025 Mets Theme Song" 
                                             frameBorder="0" 
