@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -244,39 +246,19 @@
             return ( <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in"> <div className="flex items-center gap-6 w-full md:w-auto"> <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]"><div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div></div> <div><div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div><h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2><div className="text-sm text-slate-500 font-bold mt-1">{formatDate(data.date + 'T12:00:00')}</div></div> </div> <div className="hidden md:block"><Icons.Calendar className="w-16 h-16 text-white/5" /></div> </div> );
         };
 
-        const RandomMetRibbon = ({ currentUser }) => {
+        const RandomMetRibbon = () => {
             const [data, setData] = useState({ name: 'Loading...', url: '' });
-            const [isEditing, setIsEditing] = useState(false);
-            const [tempName, setTempName] = useState('');
-            const [tempUrl, setTempUrl] = useState('');
 
             useEffect(() => {
                 const unsubscribe = db.collection('mets_settings').doc('random_met').onSnapshot(doc => {
                     if (doc.exists) {
                         setData(doc.data());
                     } else {
-                        setData({ name: 'Click to Set', url: '#' });
+                        setData({ name: 'TBD', url: '#' });
                     }
                 });
                 return () => unsubscribe();
             }, []);
-
-            const handleSave = async () => {
-                if(!tempName || !tempUrl) return;
-                try {
-                    await db.collection('mets_settings').doc('random_met').set({
-                        name: tempName,
-                        url: tempUrl
-                    });
-                    setIsEditing(false);
-                } catch(e) { alert(e.message); }
-            };
-
-            const enableEdit = () => {
-                setTempName(data.name);
-                setTempUrl(data.url);
-                setIsEditing(true);
-            };
 
             return (
                 <div className="glass-panel p-4 rounded-2xl border border-blue-500/30 flex items-center justify-between gap-4 animate-fade-in bg-gradient-to-r from-blue-900/40 to-slate-900/40">
@@ -285,96 +267,27 @@
                             Today's Random Met is:
                         </div>
                         
-                        {isEditing ? (
-                            <div className="flex flex-col md:flex-row gap-2 w-full">
-                                <input 
-                                    type="text" 
-                                    placeholder="Player Name" 
-                                    value={tempName}
-                                    onChange={(e) => setTempName(e.target.value)}
-                                    className="bg-slate-900 border border-white/20 rounded px-2 py-1 text-white text-sm focus:border-orange-500 outline-none"
-                                />
-                                <input 
-                                    type="text" 
-                                    placeholder="Bluesky/Post URL" 
-                                    value={tempUrl}
-                                    onChange={(e) => setTempUrl(e.target.value)}
-                                    className="bg-slate-900 border border-white/20 rounded px-2 py-1 text-white text-sm focus:border-orange-500 outline-none flex-1"
-                                />
-                            </div>
-                        ) : (
-                            <div className="flex flex-col md:flex-row md:items-center gap-3">
-                                <span className="text-xl md:text-2xl font-black text-white italic truncate">
-                                    {data.name}
-                                </span>
-                                {data.url && (
-                                    <a href={data.url} target="_blank" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-lg hover:scale-105">
-                                        Join Conversation Here <Icons.MessageSquare className="w-3 h-3"/>
-                                    </a>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {currentUser && (
-                        <div className="shrink-0">
-                            {isEditing ? (
-                                <div className="flex gap-2">
-                                    <button onClick={handleSave} className="bg-green-600 hover:bg-green-500 text-white p-2 rounded-lg text-xs font-bold"><Icons.Activity className="w-4 h-4" /></button>
-                                    <button onClick={() => setIsEditing(false)} className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg text-xs font-bold"><Icons.X className="w-4 h-4" /></button>
-                                </div>
-                            ) : (
-                                <button onClick={enableEdit} className="bg-slate-800 hover:bg-white/10 text-slate-400 hover:text-white p-2 rounded-lg transition-colors">
-                                    <Icons.Edit2 className="w-4 h-4" />
-                                </button>
+                        <div className="flex flex-col md:flex-row md:items-center gap-3">
+                            <span className="text-xl md:text-2xl font-black text-white italic truncate">
+                                {data.name}
+                            </span>
+                            {data.url && (
+                                <a href={data.url} target="_blank" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-lg hover:scale-105">
+                                    Join Conversation Here <Icons.MessageSquare className="w-3 h-3"/>
+                                </a>
                             )}
                         </div>
-                    )}
+                    </div>
                 </div>
             );
         };
 
-        const MediaBoard = ({ channels, currentUser, onAdd, onDelete }) => {
-            const [isFormOpen, setIsFormOpen] = useState(false);
-            const [newCh, setNewCh] = useState({ name: '', url: '' });
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if(!newCh.name || !newCh.url) return;
-                onAdd(newCh);
-                setNewCh({ name: '', url: '' });
-                setIsFormOpen(false);
-            };
-
+        const MediaBoard = ({ channels }) => {
             return (
                 <div className="space-y-8 animate-fade-in">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-black text-white flex items-center gap-2"><Icons.Tv className="w-6 h-6 text-yellow-500"/> Media Directory</h2>
-                        {currentUser && (
-                            <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2">
-                                {isFormOpen ? <Icons.X className="w-4 h-4"/> : <Icons.Link className="w-4 h-4"/>} {isFormOpen ? 'Cancel' : 'Add Link'}
-                            </button>
-                        )}
                     </div>
-
-                    {isFormOpen && currentUser && (
-                        <div className="glass-panel p-6 rounded-3xl border border-yellow-500/30 animate-fade-in">
-                            <h4 className="text-lg font-bold text-white mb-4">Add New Media Link</h4>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-500">Link Title</label>
-                                    <input type="text" placeholder="e.g. SNY YouTube" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-yellow-500" value={newCh.name} onChange={e => setNewCh({...newCh, name: e.target.value})} required />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-500">URL</label>
-                                    <input type="url" placeholder="https://..." className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-yellow-500" value={newCh.url} onChange={e => setNewCh({...newCh, url: e.target.value})} required />
-                                </div>
-                                <div className="flex justify-end">
-                                    <button type="submit" className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-6 py-2 rounded-xl shadow-lg">Save Link</button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(channels || []).map(channel => (
@@ -386,9 +299,6 @@
                                         <div className="text-xs text-slate-500 truncate">{channel.url}</div>
                                     </div>
                                 </a>
-                                {currentUser && (
-                                    <button onClick={() => onDelete(channel.id)} className="ml-3 text-slate-600 hover:text-red-500 p-2 transition-colors"><Icons.Trash2 className="w-4 h-4"/></button>
-                                )}
                             </div>
                         ))}
                         {(!channels || channels.length === 0) && <div className="col-span-full text-center text-slate-500 py-12 italic">No media links added yet.</div>}
@@ -680,55 +590,14 @@
 
         const LinksBoard = ({ links }) => { return ( <div className="space-y-8 animate-fade-in"> <div className="grid gap-3"> {(links || []).map(link => (<LinkCard key={link.id || Math.random()} link={link} />))} {(!links || links.length === 0) && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>} </div> </div> ); };
 
-        const RandomSeriesBoard = ({ entries, currentUser, onAdd, onDelete }) => {
-            const [isFormOpen, setIsFormOpen] = useState(false);
-            const [newItem, setNewItem] = useState({ player: '', date: new Date().toISOString().split('T')[0], url: '' });
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if(!newItem.player || !newItem.url) return;
-                onAdd(newItem);
-                setNewItem({ player: '', date: new Date().toISOString().split('T')[0], url: '' });
-                setIsFormOpen(false);
-            };
-
+        const RandomSeriesBoard = ({ entries }) => {
             return (
                 <div className="space-y-8 animate-fade-in">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-black text-white flex items-center gap-2">
                             <Icons.Shuffle className="w-6 h-6 text-pink-500"/> Random Met Series
                         </h2>
-                        {currentUser && (
-                            <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2">
-                                {isFormOpen ? <Icons.X className="w-4 h-4"/> : <Icons.Edit2 className="w-4 h-4"/>} {isFormOpen ? 'Cancel' : 'Add Entry'}
-                            </button>
-                        )}
                     </div>
-
-                    {isFormOpen && currentUser && (
-                        <div className="glass-panel p-6 rounded-3xl border border-pink-500/30 animate-fade-in">
-                            <h4 className="text-lg font-bold text-white mb-4">Add Daily Random Met</h4>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] uppercase font-bold text-slate-500">Player Name</label>
-                                        <input type="text" placeholder="e.g. Benny Agbayani" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500" value={newItem.player} onChange={e => setNewItem({...newItem, player: e.target.value})} required />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] uppercase font-bold text-slate-500">Date</label>
-                                        <input type="date" className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500" value={newItem.date} onChange={e => setNewItem({...newItem, date: e.target.value})} required />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-500">External Link</label>
-                                    <input type="url" placeholder="https://bluesky.app/..." className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500" value={newItem.url} onChange={e => setNewItem({...newItem, url: e.target.value})} required />
-                                </div>
-                                <div className="flex justify-end">
-                                    <button type="submit" className="bg-pink-600 hover:bg-pink-500 text-white font-bold px-6 py-2 rounded-xl shadow-lg">Save Entry</button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {(entries || []).map(entry => (
@@ -998,7 +867,7 @@
                                     </div>
                                 </div>
 
-                                <RandomMetRibbon currentUser={currentUser} />
+                                <RandomMetRibbon />
                                 <div className="relative h-96 rounded-3xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-900 to-slate-900 border border-white/10 shadow-2xl group mt-8">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
                                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-blue-900/20 to-slate-900/90"></div>
@@ -1056,7 +925,7 @@
                             />
                         )}
 
-                        {activeTab === 'media' && <MediaBoard channels={channels} currentUser={currentUser} onAdd={addChannel} onDelete={deleteChannel} />}
+                        {activeTab === 'media' && <MediaBoard channels={channels} />}
                         
                         {activeTab === 'schedule' && (
                             <div className="space-y-8 animate-fade-in">
@@ -1118,7 +987,7 @@
                         )}
                         {activeTab === 'links' && <LinksBoard links={links} />}
                         
-                        {activeTab === 'random' && <RandomSeriesBoard entries={randomMets} currentUser={currentUser} onAdd={addRandomMet} onDelete={deleteRandomMet} />}
+                        {activeTab === 'random' && <RandomSeriesBoard entries={randomMets} />}
                     </div>
                     <IOSInstallPrompt />
                     <ChatBox />
