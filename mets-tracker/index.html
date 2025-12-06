@@ -164,22 +164,26 @@
             const isLoss = game.result && game.result.includes('L');
             
             return (
-                <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all group">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 text-center">
-                            <div className="text-[10px] text-slate-500 font-bold uppercase">{game.date ? new Date(game.date).toLocaleDateString(undefined, {month:'short'}) : ''}</div>
-                            <div className="text-xl font-black text-white">{game.date ? new Date(game.date).getDate() : ''}</div>
+                <a href={`https://www.mlb.com/gameday/${game.id}`} target="_blank" rel="noopener noreferrer" className="block">
+                    <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 hover:border-blue-500/50 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 text-center">
+                                <div className="text-[10px] text-slate-500 font-bold uppercase">{game.date ? new Date(game.date).toLocaleDateString(undefined, {month:'short'}) : ''}</div>
+                                <div className="text-xl font-black text-white">{game.date ? new Date(game.date).getDate() : ''}</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</div>
+                                <div className="text-lg font-black text-white">{game.opponent}</div>
+                                <div className="text-xs text-slate-400 flex items-center gap-1">
+                                    {game.time || 'TBD'} <Icons.Link className="w-3 h-3 opacity-50"/>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</div>
-                            <div className="text-lg font-black text-white">{game.opponent}</div>
-                            <div className="text-xs text-slate-400">{game.time || 'TBD'}</div>
+                        <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
+                            {game.score || (game.result || 'Upcoming')}
                         </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
-                        {game.score || (game.result || 'Upcoming')}
-                    </div>
-                </div>
+                </a>
             );
         };
 
@@ -692,6 +696,10 @@
 
             if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black text-2xl bg-slate-900">LOADING CITI FIELD...</div>;
 
+            // --- FILTER LOGIC ---
+            const filtered2026 = (schedule2026 || []).filter(g => (g.gameType || 'Regular') === scheduleMode);
+            const filtered2025 = (schedule2025 || []).filter(g => (g.gameType || 'Regular') === scheduleMode);
+
             return (
                 <div className="min-h-screen pb-10">
                     <div className="glass-panel sticky top-0 z-50 border-b border-white/10 mb-8">
@@ -756,30 +764,6 @@
                                         </div>
                                     </div>
                                 </a>
-
-                                {/* --- 2025 THEME SONG --- */}
-                                <div className="glass-panel p-6 rounded-3xl border border-white/10 mb-8 animate-fade-in relative group">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                            <Icons.Tv className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-black text-white">2025 Mets Theme Song</h3>
-                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Queens State of Mind (Turn It Blue)</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
-                                        <iframe 
-                                            className="absolute top-0 left-0 w-full h-full"
-                                            src="https://www.youtube.com/embed/6y7sf-y-Maw" 
-                                            title="2025 Mets Theme Song" 
-                                            frameBorder="0" 
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                            allowFullScreen
-                                        ></iframe>
-                                    </div>
-                                </div>
 
                                 <RandomMetRibbon />
                                 <div className="relative h-96 rounded-3xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-900 to-slate-900 border border-white/10 shadow-2xl group mt-8">
@@ -847,9 +831,9 @@
                                         <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
                                     </div>
                                  </div>
-                                 <div className="grid gap-3">
-                                     {(schedule2026 || []).filter(g => (g.gameType || 'Regular') === scheduleMode).map(game => (<ScheduleCard key={game.id} game={game} />))}
-                                     {(!schedule2026 || schedule2026.length === 0) && <div className="text-center text-slate-500 py-12 italic">2026 Schedule not yet populated.</div>}
+                                 <div className="grid gap-3" key={scheduleMode}>
+                                     {filtered2026.map(game => (<ScheduleCard key={game.id} game={game} />))}
+                                     {(filtered2026.length === 0) && <div className="text-center text-slate-500 py-12 italic">No {scheduleMode} games found.</div>}
                                  </div>
                             </div>
                         )}
@@ -863,9 +847,9 @@
                                         <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
                                     </div>
                                  </div>
-                                 <div className="grid gap-3">
-                                     {(schedule2025 || []).filter(g => (g.gameType || 'Regular') === scheduleMode).map(game => (<ScheduleCard key={game.id} game={game} />))}
-                                     {(!schedule2025 || schedule2025.length === 0) && <div className="text-center text-slate-500 py-12 italic">No 2025 games found.</div>}
+                                 <div className="grid gap-3" key={scheduleMode}>
+                                     {filtered2025.map(game => (<ScheduleCard key={game.id} game={game} />))}
+                                     {(filtered2025.length === 0) && <div className="text-center text-slate-500 py-12 italic">No {scheduleMode} games found.</div>}
                                  </div>
                             </div>
                         )}
