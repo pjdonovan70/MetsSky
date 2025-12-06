@@ -6,13 +6,13 @@
     
     <!-- --- SOCIAL MEDIA MASTER CARD & SEO --- -->
     <title>MetsSky | The Dynasty</title>
-    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the dynasty schedule.">
+    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
     
     <!-- Open Graph / Bluesky / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://metssky.web.app/">
     <meta property="og:title" content="MetsSky | The Dynasty">
-    <meta property="og:description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, and the dynasty schedule.">
+    <meta property="og:description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, and the 2026 dynasty schedule.">
     <meta property="og:image" content="https://metssky.web.app/icon.png">
 
     <!-- Twitter / X -->
@@ -197,46 +197,24 @@
             );
         };
 
-        // --- UPDATED ScheduleCard (Added Winning Pitcher) ---
         const ScheduleCard = ({ game }) => {
             const isWin = game.result && (game.result.includes('W') || (game.score && parseInt(game.score.split('-')[0]) > parseInt(game.score.split('-')[1])));
             const isLoss = game.result && game.result.includes('L');
             
             return (
-                <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all">
-                    <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 text-center shrink-0">
+                <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all group">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 text-center">
                             <div className="text-[10px] text-slate-500 font-bold uppercase">{game.date ? new Date(game.date).toLocaleDateString(undefined, {month:'short'}) : ''}</div>
                             <div className="text-xl font-black text-white">{game.date ? new Date(game.date).getDate() : ''}</div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</span>
-                                <span className="text-lg font-black text-white truncate">{game.opponent}</span>
-                            </div>
-                            
-                            {/* Pitching Matchup / Time */}
-                            <div className="text-xs text-slate-400 mt-1 space-y-0.5">
-                                {game.result ? (
-                                    // FINAL GAME: Show Starters + Win/Loss
-                                    <>
-                                        <div className="text-slate-300">Starters: {game.homeStarter && game.awayStarter ? `${game.homeStarter.split(' ').pop()} vs ${game.awayStarter.split(' ').pop()}` : 'TBD'}</div>
-                                        <div className="flex gap-3">
-                                            {game.winPitcher && <span className="text-green-400 font-bold">W: {game.winPitcher}</span>}
-                                            {game.lossPitcher && <span className="text-red-400 font-bold">L: {game.lossPitcher}</span>}
-                                        </div>
-                                    </>
-                                ) : (
-                                    // FUTURE GAME: Show Time + Probables
-                                    <>
-                                        <div className="font-bold text-blue-400">{game.time ? new Date(game.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD'}</div>
-                                        <div className="text-slate-500">{game.homeStarter && game.awayStarter ? `${game.homeStarter.split(' ').pop()} vs ${game.awayStarter.split(' ').pop()}` : 'Probables TBD'}</div>
-                                    </>
-                                )}
-                            </div>
+                        <div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</div>
+                            <div className="text-lg font-black text-white">{game.opponent}</div>
+                            <div className="text-xs text-slate-400">{game.time || 'TBD'}</div>
                         </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 shrink-0 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
+                    <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
                         {game.score || (game.result || 'Upcoming')}
                     </div>
                 </div>
@@ -677,7 +655,7 @@
                 const hash = window.location.hash.slice(1);
                 if (!hash) return { tab: 'home', id: null };
                 const parts = hash.split('/');
-                const validTabs = ['home', 'news', 'blog', 'media', 'schedule', 'roster', 'moves', 'rants', 'links', 'random'];
+                const validTabs = ['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves', 'rants', 'links', 'random'];
                 const tab = validTabs.includes(parts[0]) ? parts[0] : 'home';
                 return { tab, id: parts[1] || null };
             };
@@ -685,31 +663,36 @@
             const activeTab = route.tab;
             const viewId = route.id;
             
-            useEffect(() => { window.scrollTo(0, 0); }, [activeTab, viewId]);
+            // --- SCROLL FIX: Force scroll to top on tab change ---
+            useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [activeTab, viewId]);
 
             const [rosterMode, setRosterMode] = useState('40man'); 
-            
-            // --- UPDATED SCHEDULE STATE ---
-            const [scheduleData, setScheduleData] = useState([]);
-            const [scheduleYear, setScheduleYear] = useState(new Date().getFullYear()); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
-            const [scheduleMonth, setScheduleMonth] = useState('All'); // NEW MONTH FILTER STATE
-            const [isScheduleLoading, setIsScheduleLoading] = useState(false); 
-
             const [currentUser, setCurrentUser] = useState(null); 
             const [authError, setAuthError] = useState(null);
+            
+            // UI States
             const [showHomeLogin, setShowHomeLogin] = useState(false);
 
             // Data States
+            // --- CHANGED: Separate states for 2026 and 2025 ---
+            const [schedule2026, setSchedule2026] = useState([]); 
+            const [schedule2025, setSchedule2025] = useState([]); 
+
             const [rants, setRants] = useState([]); 
-            const [players, setPlayers] = useState([]); 
+            const [players, setPlayers] = useState([]); // Custom "Vibes" players
             const [links, setLinks] = useState([]); 
             const [channels, setChannels] = useState([]); 
             const [news, setNews] = useState([]); 
             const [blogPosts, setBlogPosts] = useState([]);
             const [apiTransactions, setApiTransactions] = useState([]);
             const [randomMets, setRandomMets] = useState([]);
+            
+            // New Live Roster States
             const [mlbRoster, setMlbRoster] = useState([]);
+            
             const [isOnline, setIsOnline] = useState(false); 
             const [loading, setLoading] = useState(true);
             const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
@@ -726,6 +709,9 @@
                     const checkOnline = () => setIsOnline(navigator.onLine); window.addEventListener('online', checkOnline); window.addEventListener('offline', checkOnline); checkOnline();
                     
                     // Firebase Listeners
+                    db.collection('mets_schedule_2026').orderBy('date', 'asc').onSnapshot(s => setSchedule2026(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+                    db.collection('mets_schedule_2025').orderBy('date', 'asc').onSnapshot(s => setSchedule2025(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+                    
                     db.collection('mets_rants').orderBy('createdAt', 'desc').onSnapshot(s => setRants(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_roster').orderBy('createdAt', 'desc').onSnapshot(s => setPlayers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_links').orderBy('createdAt', 'desc').onSnapshot(s => setLinks(s.docs.map(d => ({ id: d.id, ...d.data() }))));
@@ -733,18 +719,21 @@
                     db.collection('mets_blog').orderBy('date', 'desc').onSnapshot(s => setBlogPosts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_random_series').orderBy('date', 'desc').onSnapshot(s => setRandomMets(s.docs.map(d => ({ id: d.id, ...d.data() }))));
 
-                    // Live Roster & Transactions
+                    // Fetch Live Roster Data (40 Man)
                     try {
                         const rosterRes = await fetch('https://statsapi.mlb.com/api/v1/teams/121/roster/40Man');
                         const rosterData = await rosterRes.json();
                         if (rosterData.roster) setMlbRoster(rosterData.roster);
+                    } catch (e) { console.error("Roster Fetch Error", e); }
 
+                    // Fetch Transactions
+                    try {
                         const today = new Date(); const endDate = today.toISOString().split('T')[0];
                         const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 6); const startDate = lastMonth.toISOString().split('T')[0];
-                        const transRes = await fetch(`https://statsapi.mlb.com/api/v1/transactions?teamId=121&startDate=${startDate}&endDate=${endDate}`);
-                        const transData = await transRes.json();
-                        if(transData.transactions) { const sorted = transData.transactions.sort((a,b) => new Date(b.date) - new Date(a.date)); setApiTransactions(sorted.slice(0, 50).map(t => ({ date: t.date, description: t.description, player: t.person ? t.person.fullName : null, type: t.typeCode }))); }
-                    } catch (e) { console.error("API Error", e); }
+                        const res = await fetch(`https://statsapi.mlb.com/api/v1/transactions?teamId=121&startDate=${startDate}&endDate=${endDate}`);
+                        const data = await res.json();
+                        if(data.transactions) { const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date)); setApiTransactions(sorted.slice(0, 50).map(t => ({ date: t.date, description: t.description, player: t.person ? t.person.fullName : null, type: t.typeCode }))); }
+                    } catch(e) { console.error("MLB API Error", e); }
 
                     // News Feed
                     db.collection('mets_news').orderBy('date', 'desc').onSnapshot(async (s) => {
@@ -754,8 +743,10 @@
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://www.mlb.com/mets/feeds/news/rss.xml&t=${Date.now()}`,
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://metsmerizedonline.com/feed/&t=${Date.now()}`, 
                                 `https://api.rss2json.com/v1/api.json?rss_url=https://risingapple.com/feed/&t=${Date.now()}`,
-                                `https://api.rss2json.com/v1/api.json?rss_url=https://www.amazinavenue.com/rss/current&t=${Date.now()}`,
-                                `https://api.rss2json.com/v1/api.json?rss_url=https://nypost.com/sports/mets/feed/&t=${Date.now()}`
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://www.amazinavenue.com/rss/current&t=${Date.now()}`, 
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://nypost.com/sports/mets/feed/&t=${Date.now()}`,
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://almostametnewsletter.substack.com/feed&t=${Date.now()}`,
+                                `https://api.rss2json.com/v1/api.json?rss_url=https://www.kinerskorner.com/feed/&t=${Date.now()}`
                             ];
                             const responses = await Promise.all(rssUrls.map(url => fetch(url).then(res => res.json()).catch(e=>null)));
                             let liveArticles = [];
@@ -769,92 +760,32 @@
                 init();
             }, []);
 
-            // --- SEPARATE USE EFFECT FOR SCHEDULE TO HANDLE LOADING STATE ---
-            useEffect(() => {
-                let active = true; // Race condition guard
-                const fetchSchedule = async () => {
-                    setIsScheduleLoading(true); // START LOADING
-                    if(active) setScheduleData([]); // CLEAR OLD DATA
-                    // Reset month to 'All' when year changes to avoid showing empty list for a future month
-                    setScheduleMonth('All');
-                    
-                    try {
-                        const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=121&season=${scheduleYear}&hydrate=team,linescore,probablePitcher,decisions`);
-                        const data = await res.json();
-                        
-                        if (data.dates && active) {
-                            const formattedGames = data.dates.flatMap(d => d.games).map(g => {
-                                const isHome = g.teams.home.team.id === 121;
-                                const opponent = isHome ? g.teams.away.team.name : g.teams.home.team.name;
-                                
-                                let result = '';
-                                let score = '';
-                                
-                                if (g.status.statusCode === 'F' || g.status.statusCode === 'O') {
-                                    const metsScore = isHome ? g.teams.home.score : g.teams.away.score;
-                                    const oppScore = isHome ? g.teams.away.score : g.teams.home.score;
-                                    score = `${metsScore}-${oppScore}`;
-                                    if(metsScore > oppScore) result = 'W';
-                                    else if (metsScore < oppScore) result = 'L';
-                                } else {
-                                    score =  g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD';
-                                }
-
-                                let type = 'Regular';
-                                if (g.gameType === 'S' || g.gameType === 'E') type = 'Spring'; // E is Exhibition
-                                if (['W', 'L', 'D', 'F'].includes(g.gameType)) type = 'Postseason';
-
-                                // Fix Date timezone issue by using string split
-                                const dateParts = g.officialDate.split('-');
-                                const safeDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-
-                                // Pitcher Data
-                                const homeStarter = g.teams.home.probablePitcher ? g.teams.home.probablePitcher.fullName : null;
-                                const awayStarter = g.teams.away.probablePitcher ? g.teams.away.probablePitcher.fullName : null;
-                                const winPitcher = g.decisions && g.decisions.winner ? g.decisions.winner.fullName : null;
-                                const lossPitcher = g.decisions && g.decisions.loser ? g.decisions.loser.fullName : null;
-
-                                return {
-                                    id: g.gamePk,
-                                    date: safeDate,
-                                    dateString: g.officialDate,
-                                    opponent: opponent,
-                                    homeAway: isHome ? 'Home' : 'Away',
-                                    score: score,
-                                    result: result, 
-                                    gameType: type,
-                                    time: g.gameDate,
-                                    homeStarter: homeStarter,
-                                    awayStarter: awayStarter,
-                                    winPitcher: winPitcher,
-                                    lossPitcher: lossPitcher
-                                };
-                            });
-                            setScheduleData(formattedGames);
-                        } else if (active) {
-                            setScheduleData([]);
-                        }
-                    } catch (e) { console.error("Schedule API Error", e); }
-                    if(active) setIsScheduleLoading(false); // STOP LOADING
-                };
-                fetchSchedule();
-                return () => { active = false; }; // Cleanup function to prevent race condition state updates
-            }, [scheduleYear]);
-
             const handleGoogleLogin = async () => { setAuthError(null); try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (error) { setAuthError(error.message); } };
             const handleEmailLogin = async (email, password) => { setAuthError(null); try { await auth.signInWithEmailAndPassword(email, password); } catch(error) { setAuthError(error.message); } };
             const handleEmailSignUp = async (email, password, username) => { setAuthError(null); try { const u = await auth.createUserWithEmailAndPassword(email, password); if(username) await u.user.updateProfile({displayName: username}); setCurrentUser({...u.user}); } catch(error) { setAuthError(error.message); } };
             const handleLogout = () => auth.signOut();
             const addRant = async (e) => { e.preventDefault(); if (!currentUser) return; try{ await db.collection('mets_rants').add({ ...newRant, date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp(), authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], authorPhoto: currentUser.photoURL }); setNewRant({ topic: '', content: '', mood: 'Neutral' }); }catch(e){alert("Error: "+e.message);} };
             const deleteRant = (id) => { if(confirm("Delete this rant?")) db.collection('mets_rants').doc(id).delete().catch(e=>alert(e.message)); };
-            const addBlogPost = async (data) => { if (!currentUser) throw new Error("You must be logged in to post."); return await db.collection('mets_blog').add({ ...data, authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], createdAt: firebase.firestore.FieldValue.serverTimestamp() }); };
+            
+            // --- UPDATED ADD BLOG FUNCTION WITH ERROR HANDLING ---
+            const addBlogPost = async (data) => { 
+                if (!currentUser) throw new Error("You must be logged in to post.");
+                return await db.collection('mets_blog').add({ 
+                    ...data, 
+                    authorId: currentUser.uid, 
+                    authorName: currentUser.displayName || currentUser.email.split('@')[0], 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                }); 
+            };
+            
             const deleteBlogPost = (id) => { if(confirm("Delete?")) db.collection('mets_blog').doc(id).delete().catch(e=>alert("Delete failed: "+e.message)); };
+            // Media/Random Add/Delete functions removed as they are now view-only
+            
+            // New Vibe Handlers
             const addVibe = async (vibe) => { if (!currentUser) return; try{await db.collection('mets_roster').add({ ...vibe, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
             const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete().catch(e=>alert(e.message)); };
 
             if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black text-2xl bg-slate-900">LOADING CITI FIELD...</div>;
-
-            const monthNames = ['All', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
 
             return (
                 <div className="min-h-screen pb-10">
@@ -865,11 +796,18 @@
                                 <div><h1 className="text-2xl md:text-3xl font-black text-white tracking-tight italic">Mets<span className="text-blue-500">Sky</span></h1><p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">The New York Frame of Mind</p></div>
                             </div>
                             <div className="w-full md:w-auto flex gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar">
-                                {['home', 'news', 'blog', 'media', 'schedule', 'roster', 'moves', 'rants', 'links', 'random'].map(tab => (
-                                    <button key={tab} onClick={() => window.location.hash = tab} className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab ? (tab === 'social' ? 'bg-sky-600' : tab === 'blog' ? 'bg-purple-600' : tab === 'random' ? 'bg-pink-600' : 'bg-blue-600') + ' text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                         {tab === 'random' ? 'Series' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                    </button>
-                                ))}
+                                {['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves', 'rants', 'links', 'random'].map(tab => {
+                                    let label = tab.charAt(0).toUpperCase() + tab.slice(1);
+                                    if(tab === 'random') label = 'Series';
+                                    if(tab === 'schedule26') label = '2026 Schedule';
+                                    if(tab === 'schedule25') label = '2025 Results';
+                                    
+                                    return (
+                                        <button key={tab} onClick={() => window.location.hash = tab} className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab ? (tab === 'social' ? 'bg-sky-600' : tab === 'blog' ? 'bg-purple-600' : tab === 'random' ? 'bg-pink-600' : tab === 'schedule26' ? 'bg-blue-600' : tab === 'schedule25' ? 'bg-slate-600' : 'bg-blue-600') + ' text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                            {label}
+                                        </button>
+                                    );
+                                })}
                                 <div className="ml-4 flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-l border-slate-700 pl-4 whitespace-nowrap"><div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 pulse-dot' : 'bg-red-500'}`}></div>{isOnline ? "LIVE" : "OFFLINE"}</div>
                             </div>
                         </div>
@@ -879,10 +817,14 @@
                         {activeTab === 'home' && (
                             <div className="animate-fade-in space-y-6">
                                 <CountdownTicket />
+                                
+                                {/* --- HOME SIGN IN --- */}
                                 <div className="flex justify-end">
                                     {currentUser ? (
                                         <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold text-white">{currentUser.displayName ? currentUser.displayName[0] : 'U'}</div>
+                                            <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold text-white">
+                                                {currentUser.displayName ? currentUser.displayName[0] : 'U'}
+                                            </div>
                                             <div className="text-sm font-bold text-white">Welcome back, {currentUser.displayName || 'Fan'}</div>
                                             <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-400 ml-2"><Icons.LogOut className="w-4 h-4"/></button>
                                         </div>
@@ -892,109 +834,194 @@
                                         </button>
                                     )}
                                 </div>
-                                {showHomeLogin && !currentUser && (<div className="animate-fade-in"><AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} /></div>)}
+                                {showHomeLogin && !currentUser && (
+                                    <div className="animate-fade-in">
+                                        <AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} />
+                                    </div>
+                                )}
+                                
+                                {/* --- METSSKY RESOURCE PAGE BUTTON --- */}
                                 <a href="https://www.qflea.com/LGM.html" target="_blank" className="block w-full glass-panel p-8 rounded-3xl text-center border-2 border-orange-500/50 hover:border-orange-400 hover:bg-white/5 transition-all group shadow-2xl shadow-orange-900/20 mb-8 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="relative z-10"><h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tighter mb-2 group-hover:scale-105 transition-transform">METSSKY RESOURCE PAGE</h2><div className="flex items-center justify-center gap-2 text-blue-400 font-bold uppercase tracking-widest text-sm md:text-base"><Icons.Link className="w-5 h-5" /> Click to Visit</div></div>
+                                    <div className="relative z-10">
+                                        <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tighter mb-2 group-hover:scale-105 transition-transform">
+                                            METSSKY RESOURCE PAGE
+                                        </h2>
+                                        <div className="flex items-center justify-center gap-2 text-blue-400 font-bold uppercase tracking-widest text-sm md:text-base">
+                                            <Icons.Link className="w-5 h-5" /> Click to Visit
+                                        </div>
+                                    </div>
                                 </a>
+
+                                {/* --- 2025 THEME SONG --- */}
                                 <div className="glass-panel p-6 rounded-3xl border border-white/10 mb-8 animate-fade-in relative group">
-                                    <div className="flex items-center gap-3 mb-4"><div className="bg-blue-600 p-2 rounded-lg text-white"><Icons.Tv className="w-5 h-5" /></div><div><h3 className="text-xl font-black text-white">2025 Mets Theme Song</h3><p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Queens State of Mind (Turn It Blue)</p></div></div>
-                                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black"><iframe className="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/6y7sf-y-Maw" title="2025 Mets Theme Song" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                            <Icons.Tv className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-white">2025 Mets Theme Song</h3>
+                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Queens State of Mind (Turn It Blue)</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
+                                        <iframe 
+                                            className="absolute top-0 left-0 w-full h-full"
+                                            src="https://www.youtube.com/embed/6y7sf-y-Maw" 
+                                            title="2025 Mets Theme Song" 
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
                                 </div>
+
                                 <RandomMetRibbon />
                                 <div className="relative h-96 rounded-3xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-900 to-slate-900 border border-white/10 shadow-2xl group mt-8">
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div><div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-blue-900/20 to-slate-900/90"></div><div className="relative z-10 text-center px-4"><h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter drop-shadow-2xl scale-95 group-hover:scale-100 transition-transform duration-500">LET'S GO <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 text-glow">METS</span></h1></div>
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-blue-900/20 to-slate-900/90"></div>
+                                    <div className="relative z-10 text-center px-4"><h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter drop-shadow-2xl scale-95 group-hover:scale-100 transition-transform duration-500">LET'S GO <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 text-glow">METS</span></h1></div>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                     <button onClick={() => window.location.hash = 'random'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-pink-500/50 md:col-span-2"><div className="p-4 bg-pink-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20"><Icons.Shuffle className="w-8 h-8 text-pink-400"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">Random Met Series</div></button>
-                                     <a href="https://bsky.app/hashtag/MetsSky" target="_blank" className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2"><div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Cloud className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">#MetsSky</div></a>
-                                    <button onClick={() => window.location.hash = 'news'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2"><div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Newspaper className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">News Wire</div></button>
-                                    <button onClick={() => window.location.hash = 'blog'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-purple-500/50 md:col-span-2"><div className="p-4 bg-purple-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20"><Icons.BookOpen className="w-8 h-8 text-purple-400"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">MetsSky Blog</div></button>
-                                    <button onClick={() => window.location.hash = 'media'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-yellow-500/50"><div className="p-4 bg-yellow-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Tv className="w-8 h-8 text-yellow-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Media</div></button>
-                                    <button onClick={() => window.location.hash = 'schedule'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-blue-500/50"><div className="p-4 bg-blue-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Calendar className="w-8 h-8 text-blue-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Season Log</div></button>
-                                    <button onClick={() => window.location.hash = 'roster'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-orange-500/50"><div className="p-4 bg-orange-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Users className="w-8 h-8 text-orange-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Roster</div></button>
-                                    <button onClick={() => window.location.hash = 'moves'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-green-500/50"><div className="p-4 bg-green-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.RefreshCw className="w-8 h-8 text-green-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Transactions</div></button>
-                                    <button onClick={() => window.location.hash = 'rants'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-red-500/50"><div className="p-4 bg-red-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-red-500/20"><Icons.MessageSquare className="w-8 h-8 text-red-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Fan Zone</div></button>
-                                    <button onClick={() => window.location.hash = 'links'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-cyan-500/50"><div className="p-4 bg-cyan-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Link className="w-8 h-8 text-cyan-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Receipts</div></button>
+                                     <button onClick={() => window.location.hash = 'random'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-pink-500/50 md:col-span-2">
+                                        <div className="p-4 bg-pink-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20"><Icons.Shuffle className="w-8 h-8 text-pink-400"/></div>
+                                        <div className="font-black text-white text-2xl uppercase tracking-wide">Random Met Series</div>
+                                     </button>
+                                     <a href="https://bsky.app/hashtag/MetsSky" target="_blank" className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2">
+                                        <div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Cloud className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">#MetsSky</div>
+                                    </a>
+                                    <button onClick={() => window.location.hash = 'news'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2">
+                                        <div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Newspaper className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">News Wire</div>
+                                    </button>
+                                    <button onClick={() => window.location.hash = 'blog'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-purple-500/50 md:col-span-2">
+                                        <div className="p-4 bg-purple-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20"><Icons.BookOpen className="w-8 h-8 text-purple-400"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">MetsSky Blog</div>
+                                    </button>
+                                    
+                                    {/* --- 2026 CARD (First) --- */}
+                                    <button onClick={() => window.location.hash = 'schedule26'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-blue-500/50">
+                                        <div className="p-4 bg-blue-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/20"><Icons.Calendar className="w-8 h-8"/></div><div className="font-black text-white text-lg uppercase tracking-wide">2026 Schedule</div>
+                                    </button>
+
+                                    {/* --- 2025 CARD (Second) --- */}
+                                    <button onClick={() => window.location.hash = 'schedule25'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-slate-500/50">
+                                        <div className="p-4 bg-slate-700 text-white rounded-2xl group-hover:scale-110 transition-transform"><Icons.ClipboardList className="w-8 h-8"/></div><div className="font-black text-white text-lg uppercase tracking-wide">2025 Results</div>
+                                    </button>
+
+                                    <button onClick={() => window.location.hash = 'media'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-yellow-500/50">
+                                        <div className="p-4 bg-yellow-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Tv className="w-8 h-8 text-yellow-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Media</div>
+                                    </button>
+                                    
+                                    <button onClick={() => window.location.hash = 'roster'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-orange-500/50">
+                                        <div className="p-4 bg-orange-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Users className="w-8 h-8 text-orange-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Roster</div>
+                                    </button>
+                                    <button onClick={() => window.location.hash = 'moves'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-green-500/50">
+                                        <div className="p-4 bg-green-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.RefreshCw className="w-8 h-8 text-green-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Transactions</div>
+                                    </button>
+                                    <button onClick={() => window.location.hash = 'rants'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-red-500/50">
+                                        <div className="p-4 bg-red-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-red-500/20"><Icons.MessageSquare className="w-8 h-8 text-red-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Fan Zone</div>
+                                    </button>
+                                    <button onClick={() => window.location.hash = 'links'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-cyan-500/50">
+                                        <div className="p-4 bg-cyan-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Link className="w-8 h-8 text-cyan-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Receipts</div>
+                                    </button>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'news' && <NewsBoard news={news} />}
-                        {activeTab === 'blog' && (<BlogBoard posts={blogPosts} viewId={viewId} currentUser={currentUser} onAdd={addBlogPost} onDelete={deleteBlogPost} onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} authError={authError} />)}
+                        
+                        {activeTab === 'blog' && (
+                            <BlogBoard 
+                                posts={blogPosts} 
+                                viewId={viewId} 
+                                currentUser={currentUser} 
+                                onAdd={addBlogPost} 
+                                onDelete={deleteBlogPost} 
+                                onGoogle={handleGoogleLogin}
+                                onEmail={handleEmailLogin}
+                                onSignUp={handleEmailSignUp}
+                                authError={authError}
+                            />
+                        )}
+
                         {activeTab === 'media' && <MediaBoard channels={channels} />}
                         
-                        {activeTab === 'schedule' && (
+                        {activeTab === 'schedule26' && (
                             <div className="space-y-8 animate-fade-in">
-                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                    <h2 className="text-2xl font-black text-white flex items-center gap-2"><Icons.Calendar className="w-6 h-6 text-blue-500"/> Season Log</h2>
-                                    <div className="flex gap-2">
-                                        <select value={scheduleYear} onChange={(e) => setScheduleYear(parseInt(e.target.value))} className="bg-slate-900/50 text-white text-xs font-bold py-2 px-3 rounded-xl border border-white/10 focus:outline-none focus:border-blue-500">
-                                            <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1} (Future)</option>
-                                            <option value={new Date().getFullYear()}>{new Date().getFullYear()} (Current)</option>
-                                            <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
-                                            <option value={new Date().getFullYear() - 2}>{new Date().getFullYear() - 2}</option>
-                                        </select>
-                                        <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
-                                            <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular</button>
-                                            <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
-                                        </div>
+                                 <div className="flex flex-wrap items-center gap-4 mb-4">
+                                    <h2 className="text-2xl font-black text-white">2026 Schedule</h2>
+                                    <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
+                                        <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular</button>
+                                        <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
                                     </div>
                                  </div>
-
-                                 {/* NEW: MONTH SELECTOR TABS */}
-                                 <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 mb-4">
-                                    {monthNames.map(m => (
-                                        <button key={m} onClick={() => setScheduleMonth(m)} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border border-white/5 ${scheduleMonth === m ? 'bg-blue-600 text-white' : 'bg-slate-900/50 text-slate-400 hover:text-white hover:bg-white/10'}`}>{m}</button>
-                                    ))}
+                                 <div className="grid gap-3">
+                                     {(schedule2026 || []).filter(g => (g.gameType || 'Regular') === scheduleMode).map(game => (<ScheduleCard key={game.id} game={game} />))}
+                                     {(!schedule2026 || schedule2026.length === 0) && <div className="text-center text-slate-500 py-12 italic">2026 Schedule not yet populated.</div>}
                                  </div>
+                            </div>
+                        )}
 
-                                 {isScheduleLoading ? (
-                                     <div className="py-20 text-center text-slate-500 font-bold flex flex-col items-center gap-4 animate-pulse"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>Loading Schedule...</div>
-                                 ) : (
-                                     <div className="grid gap-3">
-                                         {(scheduleData || [])
-                                            .filter(g => {
-                                                // Game Type Filter
-                                                const typeMatch = (scheduleMode === 'Regular') ? (g.gameType === 'Regular' || g.gameType === 'Postseason') : g.gameType === 'Spring';
-                                                // Month Filter
-                                                const monthMatch = scheduleMonth === 'All' || g.date.toLocaleString('en-US', { month: 'long' }) === scheduleMonth;
-                                                return typeMatch && monthMatch;
-                                            })
-                                            .map(game => (<ScheduleCard key={game.id} game={game} />))}
-                                         
-                                         {/* Empty State Logic */}
-                                         {(!scheduleData || scheduleData.length === 0 || scheduleData.filter(g => {
-                                             const typeMatch = (scheduleMode === 'Regular') ? (g.gameType === 'Regular' || g.gameType === 'Postseason') : g.gameType === 'Spring';
-                                             const monthMatch = scheduleMonth === 'All' || g.date.toLocaleString('en-US', { month: 'long' }) === scheduleMonth;
-                                             return typeMatch && monthMatch;
-                                         }).length === 0) && (
-                                             <div className="text-center text-slate-500 py-12 flex flex-col items-center gap-2"><Icons.Calendar className="w-8 h-8 opacity-50"/><span>No games found for {scheduleYear} ({scheduleMode}) - {scheduleMonth}</span></div>
-                                         )}
-                                     </div>
-                                 )}
+                        {activeTab === 'schedule25' && (
+                            <div className="space-y-8 animate-fade-in">
+                                 <div className="flex flex-wrap items-center gap-4 mb-4">
+                                    <h2 className="text-2xl font-black text-white">2025 Season Results</h2>
+                                    <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
+                                        <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular</button>
+                                        <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
+                                    </div>
+                                 </div>
+                                 <div className="grid gap-3">
+                                     {(schedule2025 || []).filter(g => (g.gameType || 'Regular') === scheduleMode).map(game => (<ScheduleCard key={game.id} game={game} />))}
+                                     {(!schedule2025 || schedule2025.length === 0) && <div className="text-center text-slate-500 py-12 italic">No 2025 games found.</div>}
+                                 </div>
                             </div>
                         )}
                         
-                        {activeTab === 'roster' && (<RosterBoard mlbRoster={mlbRoster} players={players} rosterMode={rosterMode} setRosterMode={setRosterMode} currentUser={currentUser} onAddVibe={addVibe} onDeleteVibe={deleteVibe} />)}
+                        {activeTab === 'roster' && (
+                            <RosterBoard 
+                                mlbRoster={mlbRoster} 
+                                players={players} 
+                                rosterMode={rosterMode} 
+                                setRosterMode={setRosterMode}
+                                currentUser={currentUser}
+                                onAddVibe={addVibe}
+                                onDeleteVibe={deleteVibe}
+                            />
+                        )}
+                        
                         {activeTab === 'moves' && <MovesBoard transactions={apiTransactions} />}
+                        
                         {activeTab === 'rants' && (
                             <div className="space-y-8 animate-fade-in">
                                 <div className="glass-panel p-6 rounded-3xl border border-orange-500/30">
-                                    <div className="flex justify-between items-center mb-4"><h3 className="text-lg font-black text-white">Fan Zone Message Board</h3>{currentUser && <button onClick={handleLogout} className="text-xs text-red-400 flex items-center gap-2 hover:text-red-300"><Icons.LogOut className="w-4 h-4"/> Sign Out</button>}</div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-lg font-black text-white">Fan Zone Message Board</h3>
+                                        {currentUser && <button onClick={handleLogout} className="text-xs text-red-400 flex items-center gap-2 hover:text-red-300"><Icons.LogOut className="w-4 h-4"/> Sign Out</button>}
+                                    </div>
                                     {!currentUser ? (<AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} />) : (
                                         <form onSubmit={addRant} className="flex flex-col gap-4">
-                                            <div className="flex items-center gap-2 mb-2">{currentUser.photoURL ? (<img src={currentUser.photoURL} className="w-8 h-8 rounded-full border border-white/20"/>) : (<div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs">{(currentUser.displayName && currentUser.displayName[0]) ? currentUser.displayName[0] : (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : 'U')}</div>)}<span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName || (currentUser.email && currentUser.email.split('@')[0]) || 'User'}</strong></span></div>
-                                            <div className="flex flex-col md:flex-row gap-4"><input type="text" placeholder="Topic" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required /><select className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white w-full md:w-auto focus:outline-none focus:border-orange-500" value={newRant.mood} onChange={e => setNewRant({...newRant, mood: e.target.value})}><option value="Neutral">Neutral</option><option value="Happy">Happy</option><option value="Angry">Angry</option></select></div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                {currentUser.photoURL ? (<img src={currentUser.photoURL} className="w-8 h-8 rounded-full border border-white/20"/>) : (<div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs">{(currentUser.displayName && currentUser.displayName[0]) ? currentUser.displayName[0] : (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : 'U')}</div>)}
+                                                <span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName || (currentUser.email && currentUser.email.split('@')[0]) || 'User'}</strong></span>
+                                            </div>
+                                            <div className="flex flex-col md:flex-row gap-4">
+                                                <input type="text" placeholder="Topic" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required />
+                                                <select className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white w-full md:w-auto focus:outline-none focus:border-orange-500" value={newRant.mood} onChange={e => setNewRant({...newRant, mood: e.target.value})}><option value="Neutral">Neutral</option><option value="Happy">Happy</option><option value="Angry">Angry</option></select>
+                                            </div>
                                             <textarea placeholder="Let it all out..." className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white h-32 focus:outline-none focus:border-orange-500" value={newRant.content} onChange={e => setNewRant({...newRant, content: e.target.value})} required />
                                             <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg">Post Rant</button>
                                         </form>
                                     )}
                                 </div>
-                                <div className="grid gap-4">{rants.map(rant => (<RantCard key={rant.id} rant={rant} currentUser={currentUser} onDelete={deleteRant} />))}{rants.length === 0 && <div className="text-center text-slate-500 py-12">No rants yet. Be the first!</div>}</div>
+                                <div className="grid gap-4">
+                                    {rants.map(rant => (<RantCard key={rant.id} rant={rant} currentUser={currentUser} onDelete={deleteRant} />))}
+                                    {rants.length === 0 && <div className="text-center text-slate-500 py-12">No rants yet. Be the first!</div>}
+                                </div>
                             </div>
                         )}
                         {activeTab === 'links' && <LinksBoard links={links} />}
+                        
                         {activeTab === 'random' && <RandomSeriesBoard entries={randomMets} />}
                     </div>
                     <IOSInstallPrompt />
