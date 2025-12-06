@@ -6,13 +6,13 @@
     
     <!-- --- SOCIAL MEDIA MASTER CARD & SEO --- -->
     <title>MetsSky | The Dynasty</title>
-    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
+    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the dynasty schedule.">
     
     <!-- Open Graph / Bluesky / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://metssky.web.app/">
     <meta property="og:title" content="MetsSky | The Dynasty">
-    <meta property="og:description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, and the 2026 dynasty schedule.">
+    <meta property="og:description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, and the dynasty schedule.">
     <meta property="og:image" content="https://metssky.web.app/icon.png">
 
     <!-- Twitter / X -->
@@ -670,7 +670,13 @@
             }, [activeTab, viewId]);
 
             const [rosterMode, setRosterMode] = useState('40man'); 
+            
+            // --- UPDATED SCHEDULE STATE ---
+            const [scheduleData, setScheduleData] = useState([]);
+            // Defaults to current year (auto-switches on Jan 1)
+            const [scheduleYear, setScheduleYear] = useState(new Date().getFullYear()); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
+
             const [currentUser, setCurrentUser] = useState(null); 
             const [authError, setAuthError] = useState(null);
             
@@ -678,7 +684,6 @@
             const [showHomeLogin, setShowHomeLogin] = useState(false);
 
             // Data States
-            const [schedule2026, setSchedule2026] = useState([]); 
             const [rants, setRants] = useState([]); 
             const [players, setPlayers] = useState([]); // Custom "Vibes" players
             const [links, setLinks] = useState([]); 
@@ -707,13 +712,61 @@
                     const checkOnline = () => setIsOnline(navigator.onLine); window.addEventListener('online', checkOnline); window.addEventListener('offline', checkOnline); checkOnline();
                     
                     // Firebase Listeners
-                    db.collection('mets_schedule_2026').orderBy('date', 'asc').onSnapshot(s => setSchedule2026(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_rants').orderBy('createdAt', 'desc').onSnapshot(s => setRants(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_roster').orderBy('createdAt', 'desc').onSnapshot(s => setPlayers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_links').orderBy('createdAt', 'desc').onSnapshot(s => setLinks(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_channels').orderBy('createdAt', 'desc').onSnapshot(s => setChannels(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_blog').orderBy('date', 'desc').onSnapshot(s => setBlogPosts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_random_series').orderBy('date', 'desc').onSnapshot(s => setRandomMets(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+                    // --- NEW: SCHEDULE API FETCH ---
+                    const fetchSchedule = async () => {
+                        try {
+                            const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=121&season=${scheduleYear}&hydrate=team,linescore`);
+                            const data = await res.json();
+                            
+                            if (data.dates) {
+                                const formattedGames = data.dates.flatMap(d => d.games).map(g => {
+                                    const isHome = g.teams.home.team.id === 121;
+                                    const opponent = isHome ? g.teams.away.team.name : g.teams.home.team.name;
+                                    
+                                    // Determine Result (W/L)
+                                    let result = '';
+                                    let score = '';
+                                    
+                                    if (g.status.statusCode === 'F' || g.status.statusCode === 'O') {
+                                        const metsScore = isHome ? g.teams.home.score : g.teams.away.score;
+                                        const oppScore = isHome ? g.teams.away.score : g.teams.home.score;
+                                        score = `${metsScore}-${oppScore}`;
+                                        if(metsScore > oppScore) result = 'W';
+                                        else if (metsScore < oppScore) result = 'L';
+                                    } else {
+                                        score =  g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD';
+                                    }
+
+                                    // Map Game Type
+                                    let type = 'Regular';
+                                    if (g.gameType === 'S') type = 'Spring';
+                                    if (['W', 'L', 'D', 'F'].includes(g.gameType)) type = 'Postseason';
+
+                                    return {
+                                        id: g.gamePk,
+                                        date: g.officialDate, // YYYY-MM-DD
+                                        opponent: opponent,
+                                        homeAway: isHome ? 'Home' : 'Away',
+                                        score: score,
+                                        result: result, // W or L
+                                        gameType: type,
+                                        time: g.gameDate // Full ISO string
+                                    };
+                                });
+                                setScheduleData(formattedGames);
+                            } else {
+                                setScheduleData([]);
+                            }
+                        } catch (e) { console.error("Schedule API Error", e); }
+                    };
+                    fetchSchedule();
 
                     // Fetch Live Roster Data (40 Man)
                     try {
@@ -754,7 +807,7 @@
                     setLoading(false);
                 };
                 init();
-            }, []);
+            }, [scheduleYear]); // Re-run when scheduleYear changes
 
             const handleGoogleLogin = async () => { setAuthError(null); try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (error) { setAuthError(error.message); } };
             const handleEmailLogin = async (email, password) => { setAuthError(null); try { await auth.signInWithEmailAndPassword(email, password); } catch(error) { setAuthError(error.message); } };
@@ -928,16 +981,49 @@
                         
                         {activeTab === 'schedule' && (
                             <div className="space-y-8 animate-fade-in">
-                                 <div className="flex flex-wrap items-center gap-4 mb-4">
-                                    <h2 className="text-2xl font-black text-white">Season Log</h2>
-                                    <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
-                                        <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular</button>
-                                        <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
+                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                    <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                                        <Icons.Calendar className="w-6 h-6 text-blue-500"/> Season Log
+                                    </h2>
+                                    
+                                    <div className="flex gap-2">
+                                        {/* YEAR SELECTOR */}
+                                        <select 
+                                            value={scheduleYear} 
+                                            onChange={(e) => setScheduleYear(parseInt(e.target.value))}
+                                            className="bg-slate-900/50 text-white text-xs font-bold py-2 px-3 rounded-xl border border-white/10 focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1} (Future)</option>
+                                            <option value={new Date().getFullYear()}>{new Date().getFullYear()} (Current)</option>
+                                            <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
+                                            <option value={new Date().getFullYear() - 2}>{new Date().getFullYear() - 2}</option>
+                                        </select>
+
+                                        {/* TYPE SELECTOR */}
+                                        <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
+                                            <button onClick={() => setScheduleMode('Regular')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Regular' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>Regular</button>
+                                            <button onClick={() => setScheduleMode('Spring')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${scheduleMode === 'Spring' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}>Spring</button>
+                                        </div>
                                     </div>
                                  </div>
+                                 
                                  <div className="grid gap-3">
-                                     {(schedule2026 || []).filter(g => (g.gameType || 'Regular') === scheduleMode).map(game => (<ScheduleCard key={game.id} game={game} />))}
-                                     {(!schedule2026 || schedule2026.length === 0) && <div className="text-center text-slate-500">No games found.</div>}
+                                     {(scheduleData || [])
+                                        .filter(g => {
+                                            // Filter Logic
+                                            if (scheduleMode === 'Regular') return g.gameType === 'Regular' || g.gameType === 'Postseason';
+                                            return g.gameType === 'Spring';
+                                        })
+                                        .map(game => (
+                                        <ScheduleCard key={game.id} game={game} />
+                                     ))}
+                                     
+                                     {(!scheduleData || scheduleData.length === 0) && (
+                                         <div className="text-center text-slate-500 py-12 flex flex-col items-center gap-2">
+                                             <Icons.Calendar className="w-8 h-8 opacity-50"/>
+                                             <span>No games found for {scheduleYear} ({scheduleMode}).</span>
+                                         </div>
+                                     )}
                                  </div>
                             </div>
                         )}
