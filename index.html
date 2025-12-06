@@ -197,24 +197,46 @@
             );
         };
 
+        // --- UPDATED ScheduleCard (Added Winning Pitcher) ---
         const ScheduleCard = ({ game }) => {
             const isWin = game.result && (game.result.includes('W') || (game.score && parseInt(game.score.split('-')[0]) > parseInt(game.score.split('-')[1])));
             const isLoss = game.result && game.result.includes('L');
             
             return (
                 <div className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/5 transition-all">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 text-center">
+                    <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 text-center shrink-0">
                             <div className="text-[10px] text-slate-500 font-bold uppercase">{game.date ? new Date(game.date).toLocaleDateString(undefined, {month:'short'}) : ''}</div>
                             <div className="text-xl font-black text-white">{game.date ? new Date(game.date).getDate() : ''}</div>
                         </div>
-                        <div>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</div>
-                            <div className="text-lg font-black text-white">{game.opponent}</div>
-                            <div className="text-xs text-slate-400">{game.time ? new Date(game.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD'}</div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{game.homeAway === 'Home' ? 'vs' : '@'}</span>
+                                <span className="text-lg font-black text-white truncate">{game.opponent}</span>
+                            </div>
+                            
+                            {/* Pitching Matchup / Time */}
+                            <div className="text-xs text-slate-400 mt-1 space-y-0.5">
+                                {game.result ? (
+                                    // FINAL GAME: Show Starters + Win/Loss
+                                    <>
+                                        <div className="text-slate-300">Starters: {game.homeStarter && game.awayStarter ? `${game.homeStarter.split(' ').pop()} vs ${game.awayStarter.split(' ').pop()}` : 'TBD'}</div>
+                                        <div className="flex gap-3">
+                                            {game.winPitcher && <span className="text-green-400 font-bold">W: {game.winPitcher}</span>}
+                                            {game.lossPitcher && <span className="text-red-400 font-bold">L: {game.lossPitcher}</span>}
+                                        </div>
+                                    </>
+                                ) : (
+                                    // FUTURE GAME: Show Time + Probables
+                                    <>
+                                        <div className="font-bold text-blue-400">{game.time ? new Date(game.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD'}</div>
+                                        <div className="text-slate-500">{game.homeStarter && game.awayStarter ? `${game.homeStarter.split(' ').pop()} vs ${game.awayStarter.split(' ').pop()}` : 'Probables TBD'}</div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
+                    <div className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 shrink-0 ${isWin ? 'bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
                         {game.score || (game.result || 'Upcoming')}
                     </div>
                 </div>
@@ -671,7 +693,8 @@
             const [scheduleData, setScheduleData] = useState([]);
             const [scheduleYear, setScheduleYear] = useState(new Date().getFullYear()); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
-            const [isScheduleLoading, setIsScheduleLoading] = useState(false); // NEW LOADING STATE
+            const [scheduleMonth, setScheduleMonth] = useState('All'); // NEW MONTH FILTER STATE
+            const [isScheduleLoading, setIsScheduleLoading] = useState(false); 
 
             const [currentUser, setCurrentUser] = useState(null); 
             const [authError, setAuthError] = useState(null);
@@ -748,14 +771,18 @@
 
             // --- SEPARATE USE EFFECT FOR SCHEDULE TO HANDLE LOADING STATE ---
             useEffect(() => {
+                let active = true; // Race condition guard
                 const fetchSchedule = async () => {
                     setIsScheduleLoading(true); // START LOADING
-                    setScheduleData([]); // CLEAR OLD DATA
+                    if(active) setScheduleData([]); // CLEAR OLD DATA
+                    // Reset month to 'All' when year changes to avoid showing empty list for a future month
+                    setScheduleMonth('All');
+                    
                     try {
-                        const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=121&season=${scheduleYear}&hydrate=team,linescore`);
+                        const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=121&season=${scheduleYear}&hydrate=team,linescore,probablePitcher,decisions`);
                         const data = await res.json();
                         
-                        if (data.dates) {
+                        if (data.dates && active) {
                             const formattedGames = data.dates.flatMap(d => d.games).map(g => {
                                 const isHome = g.teams.home.team.id === 121;
                                 const opponent = isHome ? g.teams.away.team.name : g.teams.home.team.name;
@@ -781,6 +808,12 @@
                                 const dateParts = g.officialDate.split('-');
                                 const safeDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
+                                // Pitcher Data
+                                const homeStarter = g.teams.home.probablePitcher ? g.teams.home.probablePitcher.fullName : null;
+                                const awayStarter = g.teams.away.probablePitcher ? g.teams.away.probablePitcher.fullName : null;
+                                const winPitcher = g.decisions && g.decisions.winner ? g.decisions.winner.fullName : null;
+                                const lossPitcher = g.decisions && g.decisions.loser ? g.decisions.loser.fullName : null;
+
                                 return {
                                     id: g.gamePk,
                                     date: safeDate,
@@ -790,17 +823,22 @@
                                     score: score,
                                     result: result, 
                                     gameType: type,
-                                    time: g.gameDate 
+                                    time: g.gameDate,
+                                    homeStarter: homeStarter,
+                                    awayStarter: awayStarter,
+                                    winPitcher: winPitcher,
+                                    lossPitcher: lossPitcher
                                 };
                             });
                             setScheduleData(formattedGames);
-                        } else {
+                        } else if (active) {
                             setScheduleData([]);
                         }
                     } catch (e) { console.error("Schedule API Error", e); }
-                    setIsScheduleLoading(false); // STOP LOADING
+                    if(active) setIsScheduleLoading(false); // STOP LOADING
                 };
                 fetchSchedule();
+                return () => { active = false; }; // Cleanup function to prevent race condition state updates
             }, [scheduleYear]);
 
             const handleGoogleLogin = async () => { setAuthError(null); try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (error) { setAuthError(error.message); } };
@@ -815,6 +853,8 @@
             const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete().catch(e=>alert(e.message)); };
 
             if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black text-2xl bg-slate-900">LOADING CITI FIELD...</div>;
+
+            const monthNames = ['All', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
 
             return (
                 <div className="min-h-screen pb-10">
@@ -901,18 +941,35 @@
                                         </div>
                                     </div>
                                  </div>
+
+                                 {/* NEW: MONTH SELECTOR TABS */}
+                                 <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 mb-4">
+                                    {monthNames.map(m => (
+                                        <button key={m} onClick={() => setScheduleMonth(m)} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border border-white/5 ${scheduleMonth === m ? 'bg-blue-600 text-white' : 'bg-slate-900/50 text-slate-400 hover:text-white hover:bg-white/10'}`}>{m}</button>
+                                    ))}
+                                 </div>
+
                                  {isScheduleLoading ? (
                                      <div className="py-20 text-center text-slate-500 font-bold flex flex-col items-center gap-4 animate-pulse"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>Loading Schedule...</div>
                                  ) : (
                                      <div className="grid gap-3">
                                          {(scheduleData || [])
                                             .filter(g => {
-                                                if (scheduleMode === 'Regular') return g.gameType === 'Regular' || g.gameType === 'Postseason';
-                                                return g.gameType === 'Spring';
+                                                // Game Type Filter
+                                                const typeMatch = (scheduleMode === 'Regular') ? (g.gameType === 'Regular' || g.gameType === 'Postseason') : g.gameType === 'Spring';
+                                                // Month Filter
+                                                const monthMatch = scheduleMonth === 'All' || g.date.toLocaleString('en-US', { month: 'long' }) === scheduleMonth;
+                                                return typeMatch && monthMatch;
                                             })
                                             .map(game => (<ScheduleCard key={game.id} game={game} />))}
-                                         {(!scheduleData || scheduleData.length === 0 || scheduleData.filter(g => (scheduleMode === 'Regular' ? (g.gameType === 'Regular' || g.gameType === 'Postseason') : g.gameType === 'Spring')).length === 0) && (
-                                             <div className="text-center text-slate-500 py-12 flex flex-col items-center gap-2"><Icons.Calendar className="w-8 h-8 opacity-50"/><span>No games found for {scheduleYear} ({scheduleMode}).</span></div>
+                                         
+                                         {/* Empty State Logic */}
+                                         {(!scheduleData || scheduleData.length === 0 || scheduleData.filter(g => {
+                                             const typeMatch = (scheduleMode === 'Regular') ? (g.gameType === 'Regular' || g.gameType === 'Postseason') : g.gameType === 'Spring';
+                                             const monthMatch = scheduleMonth === 'All' || g.date.toLocaleString('en-US', { month: 'long' }) === scheduleMonth;
+                                             return typeMatch && monthMatch;
+                                         }).length === 0) && (
+                                             <div className="text-center text-slate-500 py-12 flex flex-col items-center gap-2"><Icons.Calendar className="w-8 h-8 opacity-50"/><span>No games found for {scheduleYear} ({scheduleMode}) - {scheduleMonth}</span></div>
                                          )}
                                      </div>
                                  )}
