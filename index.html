@@ -4,38 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- --- SOCIAL MEDIA MASTER CARD & SEO --- -->
-    <title>MetsSky | The Dynasty</title>
-    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, news wire, and the 2026 dynasty schedule.">
+    <!-- --- SEO & META --- -->
+    <title>MetsSky | Lite</title>
+    <meta name="description" content="The ultimate hub for NY Mets fans. Live roster moves, news wire, blog, and the 2026 dynasty schedule.">
     
-    <!-- Open Graph / Bluesky / Facebook -->
+    <!-- Open Graph / Social -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://metssky.web.app/">
     <meta property="og:title" content="MetsSky | The Dynasty">
-    <meta property="og:description" content="The ultimate hub for NY Mets fans. Live roster moves, fan rants, and the 2026 dynasty schedule.">
+    <meta property="og:description" content="Live roster moves, news, and the 2026 dynasty schedule.">
     <meta property="og:image" content="https://metssky.web.app/icon.png">
 
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="MetsSky | The Dynasty">
-    <meta name="twitter:description" content="The ultimate hub for NY Mets fans.">
-    <meta name="twitter:image" content="https://metssky.web.app/icon.png">
-
-    <!-- PWA & Icon Settings -->
+    <!-- PWA Settings -->
     <meta name="theme-color" content="#002D72">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MetsSky">
 
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Firebase -->
+    <!-- Firebase (Required for Blog & Auth) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -52,14 +45,31 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .pulse-dot { animation: pulse-green 2s infinite; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); } 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
-        .chat-anim { animation: slide-up 0.3s ease-out; }
-        @keyframes slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="text-slate-200 font-sans selection:bg-orange-500/30">
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
+
+        // ==================================================================================
+        // --- MANUAL UPDATES SECTION (EDIT THIS AREA) ---
+        // ==================================================================================
+        
+        const MANUAL_SETTINGS = {
+            // 1. UPDATE THE COUNTDOWN HERE
+            countdownTitle: "Opening Day",
+            countdownDate: "2026-03-28", // Format: YYYY-MM-DD
+
+            // 2. UPDATE THE RANDOM MET RIBBON HERE
+            randomMetName: "Benny Agbayani",
+            randomMetUrl: "https://www.baseball-reference.com/players/a/agbaybe01.shtml"
+        };
+
+        // ==================================================================================
+        // --- END MANUAL UPDATES ---
+        // ==================================================================================
+
         const formatDate = (d) => { if(!d) return ''; try { const date = new Date(d); if(isNaN(date.getTime())) return ''; return date.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'}); } catch(e){return '';} };
         
         // --- ICONS ---
@@ -74,12 +84,9 @@
             ClipboardList: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
             Tv: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>,
             Play: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
-            MessageSquare: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
             Edit2: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
             FileText: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
             Send: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
-            Minimize2: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>,
-            Cloud: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c0-3.037-2.463-5.5-5.5-5.5c-1.45 0-2.748.59-3.714 1.541A5.496 5.496 0 0 0 6 13.5A5.506 5.506 0 0 0 11.5 19h6Z"/><path d="M17.5 19c2.485 0 4.5-2.015 4.5-4.5S19.985 10 17.5 10c-.16 0-.317.009-.471.025A5.5 5.5 0 0 0 12 5c-2.598 0-4.766 1.814-5.316 4.233A5.503 5.503 0 0 0 2 13.5C2 16.537 4.463 19 7.5 19h10Z"/></svg>,
             ArrowUpCircle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>,
             ArrowDownCircle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m16 12-4 4-4-4"/><path d="M12 8v8"/></svg>,
             Newspaper: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>,
@@ -88,9 +95,7 @@
             Mail: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
             Lock: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
             User: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-            Briefcase: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
             Activity: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-            Shuffle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l14.2-17"/><path d="M2 5h1.4c1.3 0 2.5.6 3.3 1.7l14.2 17"/></svg>,
             Share: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>,
             Bluesky: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 568 501" fill="currentColor" className={className}><path d="M123.121 33.664C188.241 86.551 269.601 169.041 284 199.16C298.399 169.041 379.759 86.551 444.879 33.664C495.278 -7.269 586.443 -21.465 553.528 66.514C535.19 115.531 462.641 278.11 438.031 328.01C427.682 348.995 385.498 376.015 358.309 375.375C309.803 374.233 294.625 329.873 284 316.63C273.375 329.873 258.197 374.233 209.691 375.375C182.502 376.015 140.318 348.995 129.969 328.01C105.359 278.11 32.81 115.531 14.472 66.514C-18.443 -21.465 72.722 -7.269 123.121 33.664Z"></path><path d="M284 416.545C227.142 435.545 142.368 518.261 114.761 487.669C104.974 476.825 110.873 429.541 142.368 387.545C178.508 339.356 250.781 339.356 284 387.545C317.219 339.356 389.492 339.356 425.632 387.545C457.127 429.541 463.026 476.825 453.239 487.669C425.632 518.261 340.858 435.545 284 416.545Z"></path></svg>
         };
@@ -154,49 +159,6 @@
             </div> 
         );
         
-        const LinkCard = ({ link }) => (
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 hover:border-cyan-500/50 transition-all flex justify-between items-center group gap-4">
-                <div className="flex items-center gap-4 overflow-hidden flex-1">
-                    <div className="bg-cyan-900/30 p-3 rounded-xl text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
-                        <Icons.Link className="w-5 h-5"/>
-                    </div>
-                    <div className="min-w-0">
-                        <div className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors text-sm md:text-base">{link.title}</div>
-                        <div className="text-xs text-slate-500 truncate">{link.url}</div>
-                    </div>
-                </div>
-                <a href={link.url} target="_blank" className="px-4 py-2 bg-slate-800 hover:bg-cyan-600 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap shrink-0">Visit</a>
-            </div>
-        );
-
-        const RantCard = ({ rant, currentUser, onDelete }) => {
-            const [showComments, setShowComments] = useState(false);
-            return (
-                <div className="glass-panel p-6 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all relative group">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                            {rant.authorPhoto ? <img src={rant.authorPhoto} className="w-10 h-10 rounded-full border border-white/10"/> : <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">{rant.authorName ? rant.authorName[0] : 'U'}</div>}
-                            <div>
-                                <div className="font-bold text-white text-sm">{rant.authorName}</div>
-                                <div className="text-[10px] text-slate-500 uppercase tracking-widest">{rant.mood} • {rant.createdAt ? new Date(rant.createdAt.seconds * 1000).toLocaleDateString() : 'Just Now'}</div>
-                            </div>
-                        </div>
-                        {currentUser && currentUser.uid === rant.authorId && (
-                            <button onClick={() => onDelete(rant.id)} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Trash2 className="w-4 h-4"/></button>
-                        )}
-                    </div>
-                    <h4 className="font-black text-white text-lg mb-2">{rant.topic}</h4>
-                    <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{rant.content}</p>
-                    <div className="mt-4 pt-4 border-t border-white/5">
-                        <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">
-                            <Icons.MessageSquare className="w-4 h-4"/> {showComments ? 'Hide Comments' : 'Reply / View Comments'}
-                        </button>
-                    </div>
-                    {showComments && <CommentsSection postId={rant.id} currentUser={currentUser} />}
-                </div>
-            );
-        };
-
         const ScheduleCard = ({ game }) => {
             const isWin = game.result && (game.result.includes('W') || (game.score && parseInt(game.score.split('-')[0]) > parseInt(game.score.split('-')[1])));
             const isLoss = game.result && game.result.includes('L');
@@ -224,56 +186,31 @@
         const AuthGate = ({ onGoogle, onEmail, onSignUp, error }) => {
             const [email, setEmail] = useState(''); const [pass, setPass] = useState(''); const [username, setUsername] = useState(''); const [isRegister, setIsRegister] = useState(false);
             const handleSubmit = (e) => { e.preventDefault(); isRegister ? onSignUp(email, pass, username) : onEmail(email, pass); };
-            return ( <div className="glass-panel p-8 rounded-3xl border border-orange-500/30 text-center max-w-md mx-auto animate-fade-in my-12"> <div className="flex justify-center mb-6"> <div className="bg-gradient-to-br from-orange-500 to-red-600 p-4 rounded-full shadow-lg shadow-orange-500/30"><Icons.Lock className="w-8 h-8 text-white"/></div> </div> <h3 className="text-2xl font-black text-white mb-2">MetsSky Access</h3> <p className="text-slate-400 text-sm mb-6">Sign in to write blogs and post rants.</p> {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-xl text-sm mb-4 border border-red-500/30">{error}</div>} <form onSubmit={handleSubmit} className="space-y-4 text-left"> {isRegister && (<div className="animate-fade-in"><label className="text-xs uppercase font-bold text-orange-400 ml-1">Display Name (Seen by others)</label><div className="relative"><Icons.User className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="text" required value={username} onChange={e=>setUsername(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="e.g. PolarBearFan20"/></div></div>)} <div><label className="text-xs uppercase font-bold text-slate-500 ml-1">Email</label><div className="relative"><Icons.Mail className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="you@example.com"/></div></div> <div><label className="text-xs uppercase font-bold text-slate-500 ml-1">Password</label><div className="relative"><Icons.Lock className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="password" required value={pass} onChange={e=>setPass(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="••••••••"/></div></div> <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-orange-600/20">{isRegister ? 'Create Account' : 'Sign In with Email'}</button> </form> <div className="flex items-center gap-4 my-6"><div className="h-px bg-white/10 flex-1"></div><span className="text-xs text-slate-500 font-bold">OR</span><div className="h-px bg-white/10 flex-1"></div></div> <button onClick={onGoogle} className="w-full bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200 transition-colors"><svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</button> <div className="mt-6 text-sm"><button onClick={() => setIsRegister(!isRegister)} className="text-blue-400 hover:text-white font-bold transition-colors">{isRegister ? 'Already have an account? Sign In' : 'Need an account? Register'}</button></div> </div> );
-        };
-
-        const ChatBox = () => {
-            const [isOpen, setIsOpen] = useState(false); const [username, setUsername] = useState(localStorage.getItem('mets_chat_username') || ''); const [messages, setMessages] = useState([]); const [inputText, setInputText] = useState(''); const [tempName, setTempName] = useState(''); const scrollRef = useRef(null);
-            useEffect(() => { const q = db.collection('mets_chat').orderBy('createdAt', 'asc').limitToLast(50); const unsubscribe = q.onSnapshot(snapshot => { setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, []);
-            useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, isOpen]);
-            const handleLogin = (e) => { e.preventDefault(); if (!tempName.trim()) return; setUsername(tempName); localStorage.setItem('mets_chat_username', tempName); };
-            const handleSend = async (e) => { e.preventDefault(); if (!inputText.trim()) return; await db.collection('mets_chat').add({ text: inputText, sender: username, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); setInputText(''); };
-            if (!isOpen) return ( <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-2xl z-50 border-2 border-orange-500 transition-all hover:scale-110"><Icons.MessageSquare className="w-8 h-8" /></button> );
-            return ( <div className="fixed bottom-0 right-0 w-full md:w-96 md:bottom-6 md:right-6 bg-slate-900/95 backdrop-blur-xl border-t md:border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl z-50 flex flex-col overflow-hidden chat-anim h-[65vh] md:h-[500px]" style={{maxHeight: '100dvh'}}> <div className="bg-blue-600/20 p-4 flex justify-between items-center border-b border-white/10 cursor-pointer" onClick={() => setIsOpen(false)}> <div className="flex items-center gap-2"><span className="text-xl">⚾</span><span className="font-black text-white">Bullpen Chat</span></div> <div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}><Icons.Minimize2 className="w-4 h-4 text-slate-300 hover:text-white"/></button><button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}><Icons.X className="w-4 h-4 text-slate-300 hover:text-white"/></button></div> </div> {!username ? ( <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4"> <div className="text-5xl">🏟️</div> <h3 className="text-white font-bold">Enter the Lobby</h3> <p className="text-slate-400 text-sm">Pick a name to start chatting with the squad.</p> <form onSubmit={handleLogin} className="w-full space-y-2"><input type="text" placeholder="Your Name..." className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none text-center" value={tempName} onChange={e => setTempName(e.target.value)}/><button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded-xl">Join Chat</button></form> </div> ) : ( <> <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" ref={scrollRef}> {messages.map(msg => ( <div key={msg.id} className={`flex flex-col ${msg.sender === username ? 'items-end' : 'items-start'}`}> <div className="text-[10px] text-slate-500 mb-1 px-1 font-bold">{msg.sender}</div> <div className={`px-3 py-2 rounded-xl text-sm max-w-[85%] break-words ${msg.sender === username ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>{msg.text}</div> </div> ))} </div> <form onSubmit={handleSend} className="p-3 bg-black/20 border-t border-white/5 flex gap-2"><input type="text" placeholder="Talk smack..." className="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-sm" value={inputText} onChange={e => setInputText(e.target.value)}/><button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white p-2 rounded-xl"><Icons.Send className="w-4 h-4"/></button></form> </> )} </div> );
+            return ( <div className="glass-panel p-8 rounded-3xl border border-orange-500/30 text-center max-w-md mx-auto animate-fade-in my-12"> <div className="flex justify-center mb-6"> <div className="bg-gradient-to-br from-orange-500 to-red-600 p-4 rounded-full shadow-lg shadow-orange-500/30"><Icons.Lock className="w-8 h-8 text-white"/></div> </div> <h3 className="text-2xl font-black text-white mb-2">MetsSky Access</h3> <p className="text-slate-400 text-sm mb-6">Sign in to manage blog posts.</p> {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-xl text-sm mb-4 border border-red-500/30">{error}</div>} <form onSubmit={handleSubmit} className="space-y-4 text-left"> {isRegister && (<div className="animate-fade-in"><label className="text-xs uppercase font-bold text-orange-400 ml-1">Display Name (Seen by others)</label><div className="relative"><Icons.User className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="text" required value={username} onChange={e=>setUsername(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="e.g. PolarBearFan20"/></div></div>)} <div><label className="text-xs uppercase font-bold text-slate-500 ml-1">Email</label><div className="relative"><Icons.Mail className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="you@example.com"/></div></div> <div><label className="text-xs uppercase font-bold text-slate-500 ml-1">Password</label><div className="relative"><Icons.Lock className="w-5 h-5 absolute left-3 top-3 text-slate-500"/><input type="password" required value={pass} onChange={e=>setPass(e.target.value)} className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-orange-500" placeholder="••••••••"/></div></div> <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-orange-600/20">{isRegister ? 'Create Account' : 'Sign In with Email'}</button> </form> <div className="flex items-center gap-4 my-6"><div className="h-px bg-white/10 flex-1"></div><span className="text-xs text-slate-500 font-bold">OR</span><div className="h-px bg-white/10 flex-1"></div></div> <button onClick={onGoogle} className="w-full bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200 transition-colors"><svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</button> <div className="mt-6 text-sm"><button onClick={() => setIsRegister(!isRegister)} className="text-blue-400 hover:text-white font-bold transition-colors">{isRegister ? 'Already have an account? Sign In' : 'Need an account? Register'}</button></div> </div> );
         };
 
         const CountdownTicket = () => {
-            const [data, setData] = useState({ title: 'Opening Day', date: '2026-03-28' });
-            useEffect(() => { db.collection('mets_settings').doc('countdown').onSnapshot(doc => { if (doc.exists) setData(doc.data()); }); }, []);
+            const data = { title: MANUAL_SETTINGS.countdownTitle, date: MANUAL_SETTINGS.countdownDate };
             if (!data || !data.date) return null;
             const today = new Date(); today.setHours(0,0,0,0); const target = new Date(data.date); if (isNaN(target.getTime())) return null; const diffTime = target - today; const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); const displayDays = daysLeft < 0 ? 0 : daysLeft;
             return ( <div className="glass-panel p-6 rounded-3xl border-l-8 border-orange-500 relative group flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in"> <div className="flex items-center gap-6 w-full md:w-auto"> <div className="bg-black/30 p-4 rounded-2xl border border-white/10 text-center min-w-[100px]"><div className="text-5xl font-black text-white tabular-nums tracking-tighter">{displayDays}</div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Days Left</div></div> <div><div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Countdown To</div><h2 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tight">{data.title}</h2><div className="text-sm text-slate-500 font-bold mt-1">{formatDate(data.date + 'T12:00:00')}</div></div> </div> <div className="hidden md:block"><Icons.Calendar className="w-16 h-16 text-white/5" /></div> </div> );
         };
 
-        // --- UPDATED (View Only) RandomMetRibbon ---
         const RandomMetRibbon = () => {
-            const [data, setData] = useState({ name: 'Loading...', url: '' });
-
-            useEffect(() => {
-                const unsubscribe = db.collection('mets_settings').doc('random_met').onSnapshot(doc => {
-                    if (doc.exists) {
-                        setData(doc.data());
-                    } else {
-                        setData({ name: 'TBD', url: '#' });
-                    }
-                });
-                return () => unsubscribe();
-            }, []);
-
+            const data = { name: MANUAL_SETTINGS.randomMetName, url: MANUAL_SETTINGS.randomMetUrl };
             return (
                 <div className="glass-panel p-4 rounded-2xl border border-blue-500/30 flex items-center justify-between gap-4 animate-fade-in bg-gradient-to-r from-blue-900/40 to-slate-900/40">
                     <div className="flex-1 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         <div className="text-xs font-bold text-orange-500 uppercase tracking-widest whitespace-nowrap">
                             Today's Random Met is:
                         </div>
-                        
                         <div className="flex flex-col md:flex-row md:items-center gap-3">
                             <span className="text-xl md:text-2xl font-black text-white italic truncate">
                                 {data.name}
                             </span>
                             {data.url && (
                                 <a href={data.url} target="_blank" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-lg hover:scale-105">
-                                    Join Conversation Here <Icons.MessageSquare className="w-3 h-3"/>
+                                    View Stats <Icons.Link className="w-3 h-3"/>
                                 </a>
                             )}
                         </div>
@@ -282,7 +219,6 @@
             );
         };
 
-        // --- UPDATED (View Only) MediaBoard ---
         const MediaBoard = ({ channels }) => {
             return (
                 <div className="space-y-8 animate-fade-in">
@@ -329,7 +265,6 @@
             const handleSubmit = async (e) => { 
                 e.preventDefault(); 
                 setIsUploading(true);
-                
                 try {
                     let finalImageUrl = newPost.imageUrl;
                     if (imageFile) {
@@ -337,11 +272,7 @@
                         await storageRef.put(imageFile);
                         finalImageUrl = await storageRef.getDownloadURL();
                     }
-
-                    // Await the write to see if it fails
                     await onAdd({ ...newPost, imageUrl: finalImageUrl });
-                    
-                    // Only clear if successful
                     setNewPost({ title: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] }); 
                     setImageFile(null);
                     setIsFormOpen(false); 
@@ -355,26 +286,16 @@
             const handleShare = async () => {
                 const shareText = `${activePost.title}\n\nRead more: ${window.location.href}`;
                 if (navigator.share) {
-                    try { 
-                        await navigator.share({ 
-                            title: activePost.title,
-                            text: shareText,
-                            url: window.location.href
-                        }); 
-                    } catch (err) {}
+                    try { await navigator.share({ title: activePost.title, text: shareText, url: window.location.href }); } catch (err) {}
                 } else {
                     navigator.clipboard.writeText(shareText);
                     alert('Headline & Link copied!');
                 }
             };
 
-            // --- MOBILE FIX: DETECT DEVICE AND SWITCH URL SCHEME ---
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const author = activePost ? (activePost.authorName || 'Contributor') : '';
-            // ADDED #MetsSky TAG HERE
             const textContent = activePost ? `${activePost.title}\nBy ${author}\n\nRead here: ${window.location.href}\n\n#MetsSky` : '';
-            
-            // On mobile, use the APP SCHEME (bluesky://). On desktop, use the WEBSITE (https://bsky.app)
             const baseUrl = isMobile ? 'bluesky://' : 'https://bsky.app/';
             const bskyUrl = `${baseUrl}intent/compose?text=${encodeURIComponent(textContent)}`;
 
@@ -391,7 +312,6 @@
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2"><Icons.Calendar className="w-3 h-3"/> {formatDate(activePost.date)}</div>
                                     <div className="flex gap-2">
-                                        {/* DYNAMIC LINK THAT ADAPTS TO MOBILE VS DESKTOP */}
                                         <a href={bskyUrl} target={isMobile ? undefined : "_blank"} rel="noopener noreferrer" className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-sky-500/20">
                                             <Icons.Bluesky className="w-4 h-4"/> Post to Bluesky
                                         </a>
@@ -465,7 +385,6 @@
 
         const NewsBoard = ({ news }) => { const [filterMonth, setFilterMonth] = useState('All'); const getMonthName = (d) => { if(!d) return ''; try { return new Date(d).toLocaleString('default', { month: 'long' }); } catch(e){return '';} }; const filtered = (news||[]).filter(i => { if(!i.date) return false; return filterMonth === 'All' || getMonthName(i.date) === filterMonth; }); const months = ['All', 'November', 'December', 'January', 'February', 'March', 'April']; return ( <div className="space-y-8 animate-fade-in"> <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2"> {months.map(m => ( <button key={m} onClick={() => setFilterMonth(m)} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border border-white/5 ${filterMonth === m ? 'bg-blue-600 text-white' : 'bg-slate-900/50 text-slate-400 hover:text-white hover:bg-white/10'}`}>{m}</button> ))} </div> <div className="grid gap-3"> {filtered.map(n => ( <div key={n.id} className="glass-panel p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center gap-4"> <div className="p-3 rounded-xl border border-slate-500 text-slate-400"><Icons.FileText className="w-4 h-4"/></div> <div className="min-w-0 flex-1"> <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5"> {formatDate(n.date)} • {n.source || 'News'} </div> <a href={n.url} target="_blank" className="text-white font-bold text-base md:text-lg hover:text-blue-400 transition-colors block break-words">{n.title}</a> </div> </div> ))} </div> </div> ); };
 
-        // --- UPDATED ROSTER COMPONENT ---
         const RosterBoard = ({ mlbRoster, players, rosterMode, setRosterMode, currentUser, onAddVibe, onDeleteVibe }) => {
              const [isVibeFormOpen, setIsVibeFormOpen] = useState(false);
              const [newVibe, setNewVibe] = useState({ name: '', vibe: '' });
@@ -497,8 +416,6 @@
 
              return ( 
                  <div className="space-y-8 animate-fade-in"> 
-                    
-                    {/* Mode Toggles */}
                     <div className="glass-panel p-2 rounded-2xl mb-4 w-full flex flex-col md:flex-row gap-2"> 
                         <button onClick={() => setRosterMode('40man')} className={`flex-1 py-3 md:py-2 rounded-xl text-sm font-bold transition-all ${rosterMode === '40man' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-white bg-slate-900/50'}`}>
                             <div className="flex items-center justify-center gap-2"><Icons.Users className="w-4 h-4"/> 40-Man Roster</div>
@@ -508,7 +425,6 @@
                         </button> 
                     </div> 
 
-                    {/* 40-MAN VIEW */}
                     {rosterMode === '40man' && (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
@@ -550,7 +466,6 @@
                         </div>
                     )}
 
-                    {/* VIBES VIEW */}
                     {rosterMode === 'vibes' && ( 
                         <div className="space-y-4">
                              <div className="flex items-center justify-between mb-4">
@@ -589,38 +504,6 @@
             return ( <div className="space-y-6 animate-fade-in"> <div className="flex items-center gap-3 mb-6"> <div className="bg-green-600 p-2 rounded-lg"><Icons.RefreshCw className="w-6 h-6 text-white"/></div> <div> <h2 className="text-2xl font-black text-white">Transaction Wire</h2> <p className="text-xs text-slate-400">Official MLB Data Feed • Last 50 Moves</p> </div> </div> <div className="space-y-3"> {(transactions || []).map((t, i) => ( <div key={i} className="bg-slate-900/50 p-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex gap-4 items-start"> <div className={`p-2 rounded-xl border ${getColor(t.description)}`}> {getIcon(t.description)} </div> <div className="flex-1"> <div className="flex items-center gap-2 mb-1"> <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{formatDate(t.date)}</span> {t.player && <span className="text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded font-bold">{t.player}</span>} </div> <div className="text-sm text-white font-medium leading-snug">{t.description}</div> </div> </div> ))} {(!transactions || transactions.length === 0) && ( <div className="text-center py-12 text-slate-500 italic">Scanning league wire...</div> )} </div> </div> );
         };
 
-        const LinksBoard = ({ links }) => { return ( <div className="space-y-8 animate-fade-in"> <div className="grid gap-3"> {(links || []).map(link => (<LinkCard key={link.id || Math.random()} link={link} />))} {(!links || links.length === 0) && <div className="text-center text-slate-500 py-10">No receipts saved yet.</div>} </div> </div> ); };
-
-        // --- UPDATED (View Only) RandomSeriesBoard ---
-        const RandomSeriesBoard = ({ entries }) => {
-            return (
-                <div className="space-y-8 animate-fade-in">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                            <Icons.Shuffle className="w-6 h-6 text-pink-500"/> Random Met Series
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(entries || []).map(entry => (
-                            <div key={entry.id} className="relative group">
-                                <a href={entry.url} target="_blank" className="block glass-panel p-6 rounded-2xl border border-white/10 hover:border-pink-500/50 hover:bg-white/5 transition-all h-full flex flex-col justify-between">
-                                    <div className="mb-4">
-                                        <div className="text-[10px] font-bold text-pink-400 uppercase tracking-widest mb-1">{formatDate(entry.date)}</div>
-                                        <h3 className="text-xl font-black text-white leading-tight group-hover:text-pink-400 transition-colors">{entry.player}</h3>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 group-hover:text-white transition-colors">
-                                        View Post <Icons.Link className="w-3 h-3" />
-                                    </div>
-                                </a>
-                            </div>
-                        ))}
-                        {(!entries || entries.length === 0) && <div className="col-span-full text-center text-slate-500 py-12 italic">No Random Mets added yet.</div>}
-                    </div>
-                </div>
-            );
-        };
-
         const HomeFloatingButton = () => (
             <button onClick={() => window.location.hash = 'home'} className="fixed bottom-6 left-6 bg-slate-800/90 hover:bg-slate-700 text-white px-4 py-3 rounded-full shadow-2xl z-50 border border-white/20 transition-all hover:scale-110 backdrop-blur flex items-center gap-2 font-bold">
                 <Icons.Home className="w-5 h-5" /> <span className="hidden md:inline">Home</span>
@@ -655,7 +538,7 @@
                 const hash = window.location.hash.slice(1);
                 if (!hash) return { tab: 'home', id: null };
                 const parts = hash.split('/');
-                const validTabs = ['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves', 'rants', 'links', 'random'];
+                const validTabs = ['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves'];
                 const tab = validTabs.includes(parts[0]) ? parts[0] : 'home';
                 return { tab, id: parts[1] || null };
             };
@@ -663,39 +546,26 @@
             const activeTab = route.tab;
             const viewId = route.id;
             
-            // --- SCROLL FIX: Force scroll to top on tab change ---
-            useEffect(() => {
-                window.scrollTo(0, 0);
-            }, [activeTab, viewId]);
+            useEffect(() => { window.scrollTo(0, 0); }, [activeTab, viewId]);
 
             const [rosterMode, setRosterMode] = useState('40man'); 
             const [scheduleMode, setScheduleMode] = useState('Regular'); 
             const [currentUser, setCurrentUser] = useState(null); 
             const [authError, setAuthError] = useState(null);
-            
-            // UI States
             const [showHomeLogin, setShowHomeLogin] = useState(false);
 
-            // Data States
-            // --- CHANGED: Separate states for 2026 and 2025 ---
             const [schedule2026, setSchedule2026] = useState([]); 
             const [schedule2025, setSchedule2025] = useState([]); 
 
-            const [rants, setRants] = useState([]); 
-            const [players, setPlayers] = useState([]); // Custom "Vibes" players
-            const [links, setLinks] = useState([]); 
+            const [players, setPlayers] = useState([]); 
             const [channels, setChannels] = useState([]); 
             const [news, setNews] = useState([]); 
             const [blogPosts, setBlogPosts] = useState([]);
             const [apiTransactions, setApiTransactions] = useState([]);
-            const [randomMets, setRandomMets] = useState([]);
-            
-            // New Live Roster States
             const [mlbRoster, setMlbRoster] = useState([]);
             
             const [isOnline, setIsOnline] = useState(false); 
             const [loading, setLoading] = useState(true);
-            const [newRant, setNewRant] = useState({ topic: '', content: '', mood: 'Neutral' });
 
             useEffect(() => {
                 const onHashChange = () => setRoute(getRoute());
@@ -708,15 +578,9 @@
                     auth.onAuthStateChanged(user => setCurrentUser(user || null));
                     const checkOnline = () => setIsOnline(navigator.onLine); window.addEventListener('online', checkOnline); window.addEventListener('offline', checkOnline); checkOnline();
                     
-                    // Firebase Listeners
-                    // Removed old schedule listeners
-                    
-                    db.collection('mets_rants').orderBy('createdAt', 'desc').onSnapshot(s => setRants(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_roster').orderBy('createdAt', 'desc').onSnapshot(s => setPlayers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-                    db.collection('mets_links').orderBy('createdAt', 'desc').onSnapshot(s => setLinks(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_channels').orderBy('createdAt', 'desc').onSnapshot(s => setChannels(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_blog').orderBy('date', 'desc').onSnapshot(s => setBlogPosts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-                    db.collection('mets_random_series').orderBy('date', 'desc').onSnapshot(s => setRandomMets(s.docs.map(d => ({ id: d.id, ...d.data() }))));
 
                     // Fetch Live Roster Data (40 Man)
                     try {
@@ -744,16 +608,15 @@
                                     ? `${g.teams.away.score}-${g.teams.home.score}` 
                                     : '';
                                 
-                                // Determine Win/Loss if final
                                 let result = '';
                                 if (score) {
                                     const metsScore = isHome ? g.teams.home.score : g.teams.away.score;
                                     const oppScore = isHome ? g.teams.away.score : g.teams.home.score;
                                     if (metsScore > oppScore) result = 'W ' + score;
                                     else if (metsScore < oppScore) result = 'L ' + score;
-                                    else result = score; // Tie?
+                                    else result = score; 
                                 } else {
-                                    result = g.status.detailedState; // e.g., "Scheduled"
+                                    result = g.status.detailedState; 
                                 }
 
                                 return {
@@ -764,18 +627,16 @@
                                     homeAway: isHome ? 'Home' : 'Away',
                                     result: result,
                                     score: score,
-                                    gameType: (g.gameType === 'S' || g.gameType === 'E') ? 'Spring' : 'Regular' // Map types
+                                    gameType: (g.gameType === 'S' || g.gameType === 'E') ? 'Spring' : 'Regular'
                                 };
                             }));
                         };
 
                         try {
-                            // 2025 Results
                             const res25 = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=121&season=2025&sportId=1&hydrate=team,linescore');
                             const data25 = await res25.json();
                             if (data25.dates) setSchedule2025(processGames(data25.dates));
 
-                            // 2026 Schedule
                             const res26 = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=121&season=2026&sportId=1&hydrate=team,linescore');
                             const data26 = await res26.json();
                             if (data26.dates) setSchedule2026(processGames(data26.dates));
@@ -814,10 +675,7 @@
             const handleEmailLogin = async (email, password) => { setAuthError(null); try { await auth.signInWithEmailAndPassword(email, password); } catch(error) { setAuthError(error.message); } };
             const handleEmailSignUp = async (email, password, username) => { setAuthError(null); try { const u = await auth.createUserWithEmailAndPassword(email, password); if(username) await u.user.updateProfile({displayName: username}); setCurrentUser({...u.user}); } catch(error) { setAuthError(error.message); } };
             const handleLogout = () => auth.signOut();
-            const addRant = async (e) => { e.preventDefault(); if (!currentUser) return; try{ await db.collection('mets_rants').add({ ...newRant, date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp(), authorId: currentUser.uid, authorName: currentUser.displayName || currentUser.email.split('@')[0], authorPhoto: currentUser.photoURL }); setNewRant({ topic: '', content: '', mood: 'Neutral' }); }catch(e){alert("Error: "+e.message);} };
-            const deleteRant = (id) => { if(confirm("Delete this rant?")) db.collection('mets_rants').doc(id).delete().catch(e=>alert(e.message)); };
             
-            // --- UPDATED ADD BLOG FUNCTION WITH ERROR HANDLING ---
             const addBlogPost = async (data) => { 
                 if (!currentUser) throw new Error("You must be logged in to post.");
                 return await db.collection('mets_blog').add({ 
@@ -829,9 +687,6 @@
             };
             
             const deleteBlogPost = (id) => { if(confirm("Delete?")) db.collection('mets_blog').doc(id).delete().catch(e=>alert("Delete failed: "+e.message)); };
-            // Media/Random Add/Delete functions removed as they are now view-only
-            
-            // New Vibe Handlers
             const addVibe = async (vibe) => { if (!currentUser) return; try{await db.collection('mets_roster').add({ ...vibe, createdAt: firebase.firestore.FieldValue.serverTimestamp() });}catch(e){alert(e.message);} };
             const deleteVibe = async (id) => { if (!currentUser) return; if(confirm("Delete this vibe?")) db.collection('mets_roster').doc(id).delete().catch(e=>alert(e.message)); };
 
@@ -846,14 +701,13 @@
                                 <div><h1 className="text-2xl md:text-3xl font-black text-white tracking-tight italic">Mets<span className="text-blue-500">Sky</span></h1><p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">The New York Frame of Mind</p></div>
                             </div>
                             <div className="w-full md:w-auto flex gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar">
-                                {['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves', 'rants', 'links', 'random'].map(tab => {
+                                {['home', 'news', 'blog', 'media', 'schedule26', 'schedule25', 'roster', 'moves'].map(tab => {
                                     let label = tab.charAt(0).toUpperCase() + tab.slice(1);
-                                    if(tab === 'random') label = 'Series';
                                     if(tab === 'schedule26') label = '2026 Schedule';
                                     if(tab === 'schedule25') label = '2025 Results';
                                     
                                     return (
-                                        <button key={tab} onClick={() => window.location.hash = tab} className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab ? (tab === 'social' ? 'bg-sky-600' : tab === 'blog' ? 'bg-purple-600' : tab === 'random' ? 'bg-pink-600' : tab === 'schedule26' ? 'bg-blue-600' : tab === 'schedule25' ? 'bg-slate-600' : 'bg-blue-600') + ' text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                        <button key={tab} onClick={() => window.location.hash = tab} className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab ? (tab === 'social' ? 'bg-sky-600' : tab === 'blog' ? 'bg-purple-600' : tab === 'schedule26' ? 'bg-blue-600' : tab === 'schedule25' ? 'bg-slate-600' : 'bg-blue-600') + ' text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                             {label}
                                         </button>
                                     );
@@ -934,12 +788,8 @@
                                     <div className="relative z-10 text-center px-4"><h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter drop-shadow-2xl scale-95 group-hover:scale-100 transition-transform duration-500">LET'S GO <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 text-glow">METS</span></h1></div>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                     <button onClick={() => window.location.hash = 'random'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-pink-500/50 md:col-span-2">
-                                        <div className="p-4 bg-pink-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20"><Icons.Shuffle className="w-8 h-8 text-pink-400"/></div>
-                                        <div className="font-black text-white text-2xl uppercase tracking-wide">Random Met Series</div>
-                                     </button>
                                      <a href="https://bsky.app/hashtag/MetsSky" target="_blank" className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2">
-                                        <div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Cloud className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">#MetsSky</div>
+                                        <div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Bluesky className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">#MetsSky</div>
                                     </a>
                                     <button onClick={() => window.location.hash = 'news'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-sky-500/50 md:col-span-2">
                                         <div className="p-4 bg-sky-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/20 flex gap-2"><Icons.Newspaper className="w-8 h-8"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">News Wire</div>
@@ -948,12 +798,10 @@
                                         <div className="p-4 bg-purple-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20"><Icons.BookOpen className="w-8 h-8 text-purple-400"/></div><div className="font-black text-white text-2xl uppercase tracking-wide">MetsSky Blog</div>
                                     </button>
                                     
-                                    {/* --- 2026 CARD (First) --- */}
                                     <button onClick={() => window.location.hash = 'schedule26'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-blue-500/50">
                                         <div className="p-4 bg-blue-600 text-white rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/20"><Icons.Calendar className="w-8 h-8"/></div><div className="font-black text-white text-lg uppercase tracking-wide">2026 Schedule</div>
                                     </button>
 
-                                    {/* --- 2025 CARD (Second) --- */}
                                     <button onClick={() => window.location.hash = 'schedule25'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-slate-500/50">
                                         <div className="p-4 bg-slate-700 text-white rounded-2xl group-hover:scale-110 transition-transform"><Icons.ClipboardList className="w-8 h-8"/></div><div className="font-black text-white text-lg uppercase tracking-wide">2025 Results</div>
                                     </button>
@@ -967,12 +815,6 @@
                                     </button>
                                     <button onClick={() => window.location.hash = 'moves'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-green-500/50">
                                         <div className="p-4 bg-green-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.RefreshCw className="w-8 h-8 text-green-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Transactions</div>
-                                    </button>
-                                    <button onClick={() => window.location.hash = 'rants'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-red-500/50">
-                                        <div className="p-4 bg-red-500/20 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-red-500/20"><Icons.MessageSquare className="w-8 h-8 text-red-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Fan Zone</div>
-                                    </button>
-                                    <button onClick={() => window.location.hash = 'links'} className="glass-panel p-6 rounded-3xl text-center hover:bg-white/5 transition-all group flex flex-col items-center justify-center gap-3 h-48 border border-white/10 hover:border-cyan-500/50">
-                                        <div className="p-4 bg-cyan-500/20 rounded-2xl group-hover:scale-110 transition-transform"><Icons.Link className="w-8 h-8 text-cyan-400"/></div><div className="font-black text-white text-lg uppercase tracking-wide">Receipts</div>
                                     </button>
                                 </div>
                             </div>
@@ -1041,41 +883,8 @@
                         )}
                         
                         {activeTab === 'moves' && <MovesBoard transactions={apiTransactions} />}
-                        
-                        {activeTab === 'rants' && (
-                            <div className="space-y-8 animate-fade-in">
-                                <div className="glass-panel p-6 rounded-3xl border border-orange-500/30">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-black text-white">Fan Zone Message Board</h3>
-                                        {currentUser && <button onClick={handleLogout} className="text-xs text-red-400 flex items-center gap-2 hover:text-red-300"><Icons.LogOut className="w-4 h-4"/> Sign Out</button>}
-                                    </div>
-                                    {!currentUser ? (<AuthGate onGoogle={handleGoogleLogin} onEmail={handleEmailLogin} onSignUp={handleEmailSignUp} error={authError} />) : (
-                                        <form onSubmit={addRant} className="flex flex-col gap-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                {currentUser.photoURL ? (<img src={currentUser.photoURL} className="w-8 h-8 rounded-full border border-white/20"/>) : (<div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs">{(currentUser.displayName && currentUser.displayName[0]) ? currentUser.displayName[0] : (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : 'U')}</div>)}
-                                                <span className="text-sm text-slate-400">Posting as <strong className="text-white">{currentUser.displayName || (currentUser.email && currentUser.email.split('@')[0]) || 'User'}</strong></span>
-                                            </div>
-                                            <div className="flex flex-col md:flex-row gap-4">
-                                                <input type="text" placeholder="Topic" className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white flex-1 focus:outline-none focus:border-orange-500" value={newRant.topic} onChange={e => setNewRant({...newRant, topic: e.target.value})} required />
-                                                <select className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white w-full md:w-auto focus:outline-none focus:border-orange-500" value={newRant.mood} onChange={e => setNewRant({...newRant, mood: e.target.value})}><option value="Neutral">Neutral</option><option value="Happy">Happy</option><option value="Angry">Angry</option></select>
-                                            </div>
-                                            <textarea placeholder="Let it all out..." className="bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white h-32 focus:outline-none focus:border-orange-500" value={newRant.content} onChange={e => setNewRant({...newRant, content: e.target.value})} required />
-                                            <button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg">Post Rant</button>
-                                        </form>
-                                    )}
-                                </div>
-                                <div className="grid gap-4">
-                                    {rants.map(rant => (<RantCard key={rant.id} rant={rant} currentUser={currentUser} onDelete={deleteRant} />))}
-                                    {rants.length === 0 && <div className="text-center text-slate-500 py-12">No rants yet. Be the first!</div>}
-                                </div>
-                            </div>
-                        )}
-                        {activeTab === 'links' && <LinksBoard links={links} />}
-                        
-                        {activeTab === 'random' && <RandomSeriesBoard entries={randomMets} />}
                     </div>
                     <IOSInstallPrompt />
-                    <ChatBox />
                     <HomeFloatingButton />
                 </div>
             );
