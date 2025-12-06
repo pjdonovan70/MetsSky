@@ -709,8 +709,7 @@
                     const checkOnline = () => setIsOnline(navigator.onLine); window.addEventListener('online', checkOnline); window.addEventListener('offline', checkOnline); checkOnline();
                     
                     // Firebase Listeners
-                    db.collection('mets_schedule_2026').orderBy('date', 'asc').onSnapshot(s => setSchedule2026(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-                    db.collection('mets_schedule_2025').orderBy('date', 'asc').onSnapshot(s => setSchedule2025(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+                    // Removed old schedule listeners
                     
                     db.collection('mets_rants').orderBy('createdAt', 'desc').onSnapshot(s => setRants(s.docs.map(d => ({ id: d.id, ...d.data() }))));
                     db.collection('mets_roster').orderBy('createdAt', 'desc').onSnapshot(s => setPlayers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
@@ -734,6 +733,57 @@
                         const data = await res.json();
                         if(data.transactions) { const sorted = data.transactions.sort((a,b) => new Date(b.date) - new Date(a.date)); setApiTransactions(sorted.slice(0, 50).map(t => ({ date: t.date, description: t.description, player: t.person ? t.person.fullName : null, type: t.typeCode }))); }
                     } catch(e) { console.error("MLB API Error", e); }
+                    
+                    // --- NEW: Fetch Schedule directly from MLB API ---
+                    const fetchSchedules = async () => {
+                        const processGames = (dates) => {
+                            return dates.flatMap(d => d.games.map(g => {
+                                const isHome = g.teams.home.team.id === 121;
+                                const opponent = isHome ? g.teams.away.team.name : g.teams.home.team.name;
+                                const score = g.status.detailedState === 'Final' || g.status.detailedState === 'Game Over' 
+                                    ? `${g.teams.away.score}-${g.teams.home.score}` 
+                                    : '';
+                                
+                                // Determine Win/Loss if final
+                                let result = '';
+                                if (score) {
+                                    const metsScore = isHome ? g.teams.home.score : g.teams.away.score;
+                                    const oppScore = isHome ? g.teams.away.score : g.teams.home.score;
+                                    if (metsScore > oppScore) result = 'W ' + score;
+                                    else if (metsScore < oppScore) result = 'L ' + score;
+                                    else result = score; // Tie?
+                                } else {
+                                    result = g.status.detailedState; // e.g., "Scheduled"
+                                }
+
+                                return {
+                                    id: g.gamePk,
+                                    date: g.officialDate,
+                                    time: new Date(g.gameDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                                    opponent: opponent,
+                                    homeAway: isHome ? 'Home' : 'Away',
+                                    result: result,
+                                    score: score,
+                                    gameType: (g.gameType === 'S' || g.gameType === 'E') ? 'Spring' : 'Regular' // Map types
+                                };
+                            }));
+                        };
+
+                        try {
+                            // 2025 Results
+                            const res25 = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=121&season=2025&sportId=1&hydrate=team,linescore');
+                            const data25 = await res25.json();
+                            if (data25.dates) setSchedule2025(processGames(data25.dates));
+
+                            // 2026 Schedule
+                            const res26 = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=121&season=2026&sportId=1&hydrate=team,linescore');
+                            const data26 = await res26.json();
+                            if (data26.dates) setSchedule2026(processGames(data26.dates));
+                        } catch (e) {
+                            console.error("Schedule API Error", e);
+                        }
+                    };
+                    fetchSchedules();
 
                     // News Feed
                     db.collection('mets_news').orderBy('date', 'desc').onSnapshot(async (s) => {
