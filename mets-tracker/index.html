@@ -295,6 +295,11 @@
                 return () => { document.title = "MetsSky | The Dynasty"; }
             }, [activePost]);
 
+            // --- Scroll to top when page changes ---
+            useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [currentPage]);
+
             // --- Pagination Logic ---
             const filteredPosts = (posts || []).filter(post => {
                 if (!searchTerm) return true;
